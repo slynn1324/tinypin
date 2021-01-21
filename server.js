@@ -47,8 +47,9 @@ app.get("/api/boards", (req, res) => {
 });
 
 // get board
-app.get("/api/boards/:boardId", (req, res) => {
+app.get("/api/boards/:boardId", async (req, res) => {
     try{
+        await sleep(1000);
         let board = db.prepare("SELECT * FROM boards WHERE id = ?").get(req.params.boardId);
         if ( board ){
 
@@ -70,6 +71,7 @@ app.post('/api/boards', (req, res) => {
         let result = db.prepare("INSERT INTO boards (name, createDate) VALUES (@name, @createDate)").run({name: req.body.name, createDate: new Date().toISOString()});
         let id = result.lastInsertRowid;
         let board = db.prepare("SELECT * FROM boards WHERE id = ?").get(id);
+        board.titlePinId = 0;
         res.send(board);
         console.log(`Created board#${id} ${req.body.name}`);
         
@@ -99,9 +101,19 @@ app.post("/api/boards/:boardId", (req, res) =>{
 });
 
 // delete board
-app.delete("/api/boards/:boardId", (req, res) => {
+app.delete("/api/boards/:boardId", async (req, res) => {
     try{
-        let result = db.prepare("DELETE FROM boards WHERE id = ?").run(req.params.boardId);
+        await sleep(1000);      
+
+        let pins = db.prepare("SELECT id FROM pins WHERE boardId = ?").all(req.params.boardId);
+        for ( let i = 0; i < pins.length; ++i ){
+            await fs.unlink(getThumbnailImagePath(pins[i].id).file);
+            await fs.unlink(getOriginalImagePath(pins[i].id).file);
+        }
+
+        let result = db.prepare("DELETE FROM pins WHERE boardId = ?").run(req.params.boardId);
+        result = db.prepare("DELETE FROM boards WHERE id = ?").run(req.params.boardId);
+
         if ( result.changes == 1 ){
             res.send(OK);
         } else {
@@ -128,9 +140,19 @@ app.get("/api/pins/:pinId", (req, res) => {
     }
 });
 
+async function sleep(millis){
+    return new Promise( (resolve,reject) => {
+        setTimeout(() => {
+            resolve();
+        }, millis)
+    });
+}
+
 // create pin
 app.post("/api/pins", async (req, res) => {
     try {
+
+        await sleep(1000);
 
         console.log(req.body);
 
@@ -212,6 +234,7 @@ app.post("/api/pins/:pinId", (req,res) => {
         });
 
         if ( result.changes == 1 ){
+            console.log(`updated pin#${req.params.pinId}`)
             res.send(OK);
         } else {
             res.status(404).send(NOT_FOUND);
@@ -221,6 +244,29 @@ app.post("/api/pins/:pinId", (req,res) => {
         res.status(500).send(SERVER_ERROR);
     }
 
+});
+
+app.delete("/api/pins/:pinId", async (req, res) => {
+
+    await sleep(1000);
+
+    try {
+
+        await fs.unlink(getThumbnailImagePath(req.params.pinId).file);
+        await fs.unlink(getOriginalImagePath(req.params.pinId).file);
+
+        let result = db.prepare('DELETE FROM pins WHERE id = ?').run(req.params.pinId);
+
+        if ( result.changes == 1 ){
+            console.log(`deleted pin#${req.params.pinId}`);
+            res.send(OK);
+        } else {
+            res.status(404).send(NOT_FOUND);
+        }
+    } catch (err){
+        console.log(`Error deleting pin#${req.params.pinId}`, err);
+        res.status(500).send(SERVER_ERROR);
+    }
 });
 
 
@@ -269,6 +315,10 @@ function initDb(){
         )
         `).run();
 
+        db.prepare(`
+            INSERT INTO boards (id, name, createDate) VALUES (0, 'Default Board', ?)
+        `).run(new Date().toISOString());
+
         db.prepare("INSERT INTO migrations (id, createDate) VALUES ( @id, @createDate )").run({id:1, createDate: new Date().toISOString()});
 
     } else {
@@ -309,13 +359,7 @@ async function downloadImage(imageUrl){
     }
 }
 
-// function padId(id){
-//     let result = id.toString();
-//     while ( result.length < 12 ) {
-//         result = '0' + result;
-//     }
-//     return result;
-// }
+
 
 function getOriginalImagePath(pinId){
     let paddedId = pinId.toString().padStart(12, '0');
