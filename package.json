@@ -2,12 +2,11 @@
   "name": "tinypin",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "run": "node app.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "slynn1324",
   "license": "ISC",
   "dependencies": {
     "better-sqlite3": "^7.1.2",
