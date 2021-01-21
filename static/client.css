@@ -1,0 +1,104 @@
+.brick-wall {
+    display: flex;
+}
+
+.brick-wall-column {
+    flex: 1;
+    width: 100%;
+}
+
+.brick {
+    margin: 0 5px 10px 5px;
+}
+
+.brick img {    
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    background-color: #ccc;
+}
+
+#brick-wall-container {
+    max-width: 95%;
+}
+
+.board-brick:hover img{
+    opacity: 0.9;
+}
+
+.board-brick-name {
+    color: #444;
+    font-size: 24px;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.board-brick a{
+    display: block;
+    height: 250px;
+    width: 100%;
+}
+
+.board-brick a img{
+    height: 200px;
+    object-fit: cover;
+}
+
+#pin-zoom-modal .modal-content {
+    height: 90%;
+    width: 90%;
+}
+
+#pin-zoom-modal .modal-content p {
+    height: 100%;
+}
+
+#pin-zoom-modal .modal-content p img {
+    height: 100%;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    object-fit: contain;
+}
+
+#add-pin-modal-board-name {
+    font-weight: bold;
+}
+
+#add-pin-modal .add-pin-flex {
+    display: flex;
+}
+
+#add-pin-modal .add-pin-flex-left {
+    flex: 1;
+    
+    margin: 10px;
+    margin-top: 40px;
+}
+
+#add-pin-modal .add-pin-flex-left img{
+    border-radius: 12px; 
+    width: 100%; 
+    height: auto; 
+    display: block;
+}
+
+#add-pin-modal .add-pin-flex-right {
+    flex: 2;
+    margin: 10px;
+}
+
+#footer {
+    padding: 1rem 1.5rem 1rem;
+}
+
+#app {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+  
+.section {
+    flex: 1;
+}

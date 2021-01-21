@@ -1,0 +1,10 @@
+{
+    "name": "TinyPin Plugin",
+    "version": "1.0",
+    "description": "TinyPin context plugin",
+    "manifest_version": 2,
+    "background" : { "scripts": ["background.js"] },
+    "permissions" : [
+        "contextMenus"
+    ]
+  }
