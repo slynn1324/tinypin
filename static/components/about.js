@@ -40,6 +40,9 @@ app.addComponent('aboutModal', (store) => { return new Reef("#aboutModal", {
                         <br />
                         &nbsp;trash icon &raquo; <a href="https://thenounproject.com/term/trash/2449397/">Trash by ICONZ from the Noun Project</a>
                         <br />
+                        &nbsp;missing icon &raquo; <a href="https://materialdesignicons.com/icon/dots-square">dots-square by Jeff Hilnbrand</a>
+                        <br />
+                        <br />
                         server
                         <br />
                         &nbsp;language &amp; runtime &raquo; <a href="https://nodejs.org/en/">node.js</a>

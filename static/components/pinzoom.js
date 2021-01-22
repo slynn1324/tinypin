@@ -110,6 +110,23 @@ app.addComponent('pinZoomModal', (store) => { return new Reef("#pinZoomModal", {
             siteLink = `<a class="pinZoomModal-site-link" href="${data.pinZoomModal.pin.siteUrl}"></a>`;
         }
 
+        let pinZoomDescription = '';
+        if ( data.pinZoomModal.pin && data.pinZoomModal.pin.description && data.pinZoomModal.pin.description.length > 0 ){
+            pinZoomDescription = `
+            <div class="pinZoomModal-description" data-onclick="pinZoomModal.showFullDescription">${data.pinZoomModal.pin.description}</div>
+                
+            <div class="pinZoomModal-full-description ${data.pinZoomModal.fullDescriptionOpen ? 'pinZoomModal-full-description-open' : ''}">
+                <div>
+                    <a class="pinZoomModal-hide-full-description" data-onclick="pinZoomModal.hideFullDescription">&nbsp;</a>
+                </div>
+                <div class="content">
+                    ${data.pinZoomModal.pin.description}
+                </div>
+            </div>
+            `;
+        }
+
+
         return /*html*/`
             <div class="modal ${data.pinZoomModal.active ? 'is-active' : ''}">
                 <div class="modal-background" data-onclick="pinZoomModal.close"></div>
@@ -123,16 +140,7 @@ app.addComponent('pinZoomModal', (store) => { return new Reef("#pinZoomModal", {
                 <a class="pinZoomModal-edit" data-onclick="pinZoomModal.editPin"></a>
                 <a class="pinZoomModal-delete" data-onclick="pinZoomModal.deletePin"></a>
                 
-                <div class="pinZoomModal-description" data-onclick="pinZoomModal.showFullDescription">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
-                
-                <div class="pinZoomModal-full-description ${data.pinZoomModal.fullDescriptionOpen ? 'pinZoomModal-full-description-open' : ''}">
-                    <div>
-                        <a class="pinZoomModal-hide-full-description" data-onclick="pinZoomModal.hideFullDescription">&nbsp;</a>
-                    </div>
-                    <div class="content">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                    </div>
-                </div>
+                ${pinZoomDescription}
                 
             </div>
         `;
