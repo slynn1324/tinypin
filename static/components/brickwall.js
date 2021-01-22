@@ -4,9 +4,26 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
     template: (data, el) => {
 
         // if the hash says we are supposed to be drawing a board, but it hasn't loaded yet... draw an empty div.
-        if ( data.hash.board && !data.board ){
+        if ( !data.initialized || (data.hash.board && !data.board) ){
             return '<div></div>';
         } 
+
+        if ( data.hash.board && data.board.pins.length == 0 ){
+            return `<div class="has-text-centered is-flex-grow-1">
+                <h1>This board has no pins :(</h1>
+                <div class="mt-4">
+                    <a data-onclick="addPinModal.open">Pin Something</a>
+                </div>
+            </div>`;
+            
+        } else if ( !data.hash.board && data.boards.length == 0 ){
+            return `<div class="has-text-centered is-flex-grow-1">
+                <h1>There are no boards :(</h1>
+                <div class="mt-4">
+                    <a data-onclick="addPinModal.open">Pin Something</a>
+                </div>
+            </div>`;
+        }
 
         let numberOfColumns = 1;
         let width = el.offsetWidth;

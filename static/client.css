@@ -64,32 +64,33 @@
     object-fit: contain;
 }
 
-#addPinModal-boardName {
+#addPinModal-boardName, #editPinModal-boardName {
     font-weight: bold;
 }
 
-#addPinModal .add-pin-flex {
+#addPinModal .add-pin-flex, #editPinModal .add-pin-flex {
     display: flex;
 }
 
-#addPinModal .add-pin-flex-left {
+#addPinModal .add-pin-flex-left, #editPinModal .add-pin-flex-left {
     flex: 1;
     
     margin: 10px;
     margin-top: 40px;
 }
 
-#addPinModal .add-pin-flex-left img{
+#addPinModal .add-pin-flex-left img, #editPinModal .add-pin-flex-left img{
     border-radius: 12px; 
     width: 100%; 
     height: auto; 
     display: block;
 }
 
-#addPinModal .add-pin-flex-right {
+#addPinModal .add-pin-flex-right, #editPinModal .add-pin-flex-right {
     flex: 2;
     margin: 10px;
 }
+
 
 #footer {
     padding: 1rem 1.5rem 1rem;
@@ -155,8 +156,6 @@
 .pinZoomModal-edit {
     opacity: 1;
 }
-
-
 
 #pinZoomModal .pinZoomModal-description {
     position: fixed;

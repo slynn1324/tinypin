@@ -9,6 +9,7 @@ const fetch = require('node-fetch');
 
 const IMAGE_PATH = "./images";
 
+
 // express config
 const app = express();
 const port = 3000;
@@ -17,6 +18,14 @@ app.use(express.static('images'));
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
 app.set('json spaces', 2);
+
+// emulate slow down
+app.use( (req,res,next) => {
+    console.log("slow...");
+    setTimeout(() => {
+        next();
+    }, 2000);
+});
 
 const OK = {status: "ok"};
 const NOT_FOUND = {status: "error", error: "not found"};
@@ -28,7 +37,6 @@ initDb();
 // list boards
 app.get("/api/boards", async (req, res) => {
     try{
-        await sleep(1000);
         let boards = db.prepare("SELECT * FROM boards").all();
 
         for( let i = 0; i < boards.length; ++i ){
@@ -50,7 +58,8 @@ app.get("/api/boards", async (req, res) => {
 // get board
 app.get("/api/boards/:boardId", async (req, res) => {
     try{
-        await sleep(1000);
+
+
         let board = db.prepare("SELECT * FROM boards WHERE id = ?").get(req.params.boardId);
         if ( board ){
 
@@ -103,8 +112,7 @@ app.post("/api/boards/:boardId", (req, res) =>{
 
 // delete board
 app.delete("/api/boards/:boardId", async (req, res) => {
-    try{
-        await sleep(1000);      
+    try{     
 
         let pins = db.prepare("SELECT id FROM pins WHERE boardId = ?").all(req.params.boardId);
         for ( let i = 0; i < pins.length; ++i ){
@@ -141,19 +149,9 @@ app.get("/api/pins/:pinId", (req, res) => {
     }
 });
 
-async function sleep(millis){
-    return new Promise( (resolve,reject) => {
-        setTimeout(() => {
-            resolve();
-        }, millis)
-    });
-}
-
 // create pin
 app.post("/api/pins", async (req, res) => {
     try {
-
-        await sleep(1000);
 
         console.log(req.body);
 
@@ -248,9 +246,6 @@ app.post("/api/pins/:pinId", (req,res) => {
 });
 
 app.delete("/api/pins/:pinId", async (req, res) => {
-
-    await sleep(1000);
-
     try {
 
         await fs.unlink(getThumbnailImagePath(req.params.pinId).file);

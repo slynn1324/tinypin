@@ -19,6 +19,8 @@ app.addSetter("load.boards", async (data) => {
 
     let res = await fetch("/api/boards");
     data.boards = await res.json();
+
+    data.initialized = true;
     
     store.do("loader.hide");
 });
@@ -54,10 +56,12 @@ let store = new Reef.Store({
         hash: {
             board: null
         },
+        initialized: false,
         loading: 0,
         boards: [],
         board: null,
         addPinModal: {
+            pinId: null,
             active: false,
             boardId: "",
             newBoardName: null,
@@ -78,6 +82,12 @@ let store = new Reef.Store({
         editBoardModal: {
             active: false,
             name: ""
+        },
+        editPinModal: {
+            active: false,
+            pin: null,
+            newBoardName: null,
+            saveInProgress: false
         }
     },
     getters: app.getGetters(),
@@ -108,6 +118,7 @@ const appComponent = new Reef("#app", {
         <div id="pinZoomModal"></div>
         <div id="editBoardModal"></div>
         <div id="aboutModal"></div>
+        <div id="editPinModal"></div>
         `
         //<div id="loader" class="button is-text ${data.loading ? 'is-loading' : ''}"></div>
     }

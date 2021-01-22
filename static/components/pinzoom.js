@@ -32,7 +32,9 @@ app.addSetter('pinZoomModal.open', (data, el) => {
     let pinId = el.getAttribute("data-pinid");
 
     if( pinId ){
-        data.pinZoomModal.pin = getPinById(pinId);
+        let idx = getPinIndexById(pinId);
+
+        data.pinZoomModal.pin = data.board.pins[idx];
         data.pinZoomModal.active = true;
     }
     
@@ -99,6 +101,16 @@ app.addSetter('pinZoomModal.deletePin', async (data) => {
     }
 
     store.do('loader.hide');
+});
+
+app.addSetter('pinZoomModal.editPin', (data) => {
+
+    // intentially read from store so we get an immutable copy
+    data.editPinModal.pin = store.data.pinZoomModal.pin;
+    
+    console.log(data.editPinModal.pin);
+    store.do('editPinModal.open');
+
 });
 
 app.addComponent('pinZoomModal', (store) => { return new Reef("#pinZoomModal", {
