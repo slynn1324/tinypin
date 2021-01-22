@@ -20,12 +20,12 @@ app.use(bodyParser.json());
 app.set('json spaces', 2);
 
 // emulate slow down
-app.use( (req,res,next) => {
-    console.log("slow...");
-    setTimeout(() => {
-        next();
-    }, 2000);
-});
+// app.use( (req,res,next) => {
+//     console.log("slow...");
+//     setTimeout(() => {
+//         next();
+//     }, 2000);
+// });
 
 const OK = {status: "ok"};
 const NOT_FOUND = {status: "error", error: "not found"};
