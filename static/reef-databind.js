@@ -1,5 +1,105 @@
 // this currently will bind all fields with 'data-bind' attributes
 // to the 'store'. 
+
+app.addSetter('databind.onInput', (data, bindPath, value) => {
+    console.log(`binding ${bindPath} to ${value}`);
+    put(data, bindPath, value);
+
+    /*!
+    * Add items to an object at a specific path
+    * (c) 2018 Chris Ferdinandi, MIT License, https://gomakethings.com
+    * @param  {Object}       obj  The object
+    * @param  {String|Array} path The path to assign the value to
+    * @param  {*}            val  The value to assign
+    */
+    function put(obj, path, val) {
+
+        /**
+         * If the path is a string, convert it to an array
+         * @param  {String|Array} path The path
+         * @return {Array}             The path array
+         */
+        var stringToPath = function (path) {
+
+            // If the path isn't a string, return it
+            if (typeof path !== 'string') return path;
+
+            // Create new array
+            var output = [];
+
+            // Split to an array with dot notation
+            path.split('.').forEach(function (item, index) {
+
+                // Split to an array with bracket notation
+                item.split(/\[([^}]+)\]/g).forEach(function (key) {
+
+                    // Push to the new array
+                    if (key.length > 0) {
+                        output.push(key);
+                    }
+
+                });
+
+            });
+
+            return output;
+
+        };
+
+        // Convert the path to an array if not already
+        path = stringToPath(path);
+
+        // Cache the path length and current spot in the object
+        var length = path.length;
+        var current = obj;
+
+        // Loop through the path
+        path.forEach(function (key, index) {
+
+            // Check if the assigned key shoul be an array
+            var isArray = key.slice(-2) === '[]';
+
+            // If so, get the true key name by removing the trailing []
+            key = isArray ? key.slice(0, -2) : key;
+
+            // If the key should be an array and isn't, create an array
+            if (isArray && Object.prototype.toString.call(current[key]) !== '[object Array]') {
+                current[key] = [];
+            }
+
+            // If this is the last item in the loop, assign the value
+            if (index === length - 1) {
+
+                // If it's an array, push the value
+                // Otherwise, assign it
+                if (isArray) {
+                    current[key].push(val);
+                } else {
+                    current[key] = val;
+                }
+            }
+
+            // Otherwise, update the current place in the object
+            else {
+
+                // If the key doesn't exist, create it
+                if (!current[key]) {
+                    current[key] = {};
+                }
+
+                // Update the current place in the object
+                current = current[key];
+
+            }
+
+        });
+
+    };
+
+
+
+});
+
 Reef.databind = function(reef){
 
     let el = document.querySelector(reef.elem);
@@ -12,6 +112,7 @@ Reef.databind = function(reef){
 
     // bind all elements on the page that have a data-bind item
     const bindData = debounce(() => {
+        console.log("bindData");
         let elems = el.querySelectorAll("[data-bind]");
 
         for ( let i = 0; i < elems.length; ++i ){
@@ -54,6 +155,8 @@ Reef.databind = function(reef){
         }
     });
 
+        
+
     el.addEventListener('input', (evt) => {
 
         let target = evt.target;
@@ -86,7 +189,8 @@ Reef.databind = function(reef){
                 val = parseString(val);
             }
             
-            put(store.data, bindPath, val);
+            store.do('databind.onInput', bindPath, val);
+            //put(store.data, bindPath, val);
         }
     });
    
@@ -201,98 +305,4 @@ Reef.databind = function(reef){
 
     };
 
-
-    /*!
-    * Add items to an object at a specific path
-    * (c) 2018 Chris Ferdinandi, MIT License, https://gomakethings.com
-    * @param  {Object}       obj  The object
-    * @param  {String|Array} path The path to assign the value to
-    * @param  {*}            val  The value to assign
-    */
-    function put(obj, path, val) {
-
-        /**
-         * If the path is a string, convert it to an array
-         * @param  {String|Array} path The path
-         * @return {Array}             The path array
-         */
-        var stringToPath = function (path) {
-
-            // If the path isn't a string, return it
-            if (typeof path !== 'string') return path;
-
-            // Create new array
-            var output = [];
-
-            // Split to an array with dot notation
-            path.split('.').forEach(function (item, index) {
-
-                // Split to an array with bracket notation
-                item.split(/\[([^}]+)\]/g).forEach(function (key) {
-
-                    // Push to the new array
-                    if (key.length > 0) {
-                        output.push(key);
-                    }
-
-                });
-
-            });
-
-            return output;
-
-        };
-
-        // Convert the path to an array if not already
-        path = stringToPath(path);
-
-        // Cache the path length and current spot in the object
-        var length = path.length;
-        var current = obj;
-
-        // Loop through the path
-        path.forEach(function (key, index) {
-
-            // Check if the assigned key shoul be an array
-            var isArray = key.slice(-2) === '[]';
-
-            // If so, get the true key name by removing the trailing []
-            key = isArray ? key.slice(0, -2) : key;
-
-            // If the key should be an array and isn't, create an array
-            if (isArray && Object.prototype.toString.call(current[key]) !== '[object Array]') {
-                current[key] = [];
-            }
-
-            // If this is the last item in the loop, assign the value
-            if (index === length - 1) {
-
-                // If it's an array, push the value
-                // Otherwise, assign it
-                if (isArray) {
-                    current[key].push(val);
-                } else {
-                    current[key] = val;
-                }
-            }
-
-            // Otherwise, update the current place in the object
-            else {
-
-                // If the key doesn't exist, create it
-                if (!current[key]) {
-                    current[key] = {};
-                }
-
-                // Update the current place in the object
-                current = current[key];
-
-            }
-
-        });
-
-    };
-
 }
-
-

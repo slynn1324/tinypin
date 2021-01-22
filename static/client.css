@@ -1,8 +1,8 @@
-.brick-wall {
+.brickwall {
     display: flex;
 }
 
-.brick-wall-column {
+.brickwall-column {
     flex: 1;
     width: 100%;
 }
@@ -19,7 +19,7 @@
     background-color: #ccc;
 }
 
-#brick-wall-container {
+#brickwall-container {
     max-width: 95%;
 }
 
@@ -45,18 +45,18 @@
     object-fit: cover;
 }
 
-#pin-zoom-modal .modal-content {
+#pinZoomModal .modal-content {
     /* height: 90%; */
     height: calc(100% - 120px);
     min-height: 50px;
     width: 90%;
 }
 
-#pin-zoom-modal .modal-content > p {
+#pinZoomModal .modal-content > p {
     height: 100%;
 }
 
-#pin-zoom-modal .modal-content > p > img {
+#pinZoomModal .modal-content > p > img {
     height: 100%;
     width: 100%;
     margin-left: auto;
@@ -64,29 +64,29 @@
     object-fit: contain;
 }
 
-#add-pin-modal-board-name {
+#addPinModal-boardName {
     font-weight: bold;
 }
 
-#add-pin-modal .add-pin-flex {
+#addPinModal .add-pin-flex {
     display: flex;
 }
 
-#add-pin-modal .add-pin-flex-left {
+#addPinModal .add-pin-flex-left {
     flex: 1;
     
     margin: 10px;
     margin-top: 40px;
 }
 
-#add-pin-modal .add-pin-flex-left img{
+#addPinModal .add-pin-flex-left img{
     border-radius: 12px; 
     width: 100%; 
     height: auto; 
     display: block;
 }
 
-#add-pin-modal .add-pin-flex-right {
+#addPinModal .add-pin-flex-right {
     flex: 2;
     margin: 10px;
 }
@@ -106,49 +106,7 @@
 }
 
 
-/*
- * loader - https://loading.io/css/
- */
- .lds-ring {
-    display: inline-block;
-    position: relative;
-    width: 80px;
-    height: 80px;
-  }
-  .lds-ring div {
-    box-sizing: border-box;
-    display: block;
-    position: absolute;
-    width: 64px;
-    height: 64px;
-    margin: 8px;
-    border: 8px solid #fff;
-    border-radius: 50%;
-    animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    border-color: #fff transparent transparent transparent;
-  }
-  .lds-ring div:nth-child(1) {
-    animation-delay: -0.45s;
-  }
-  .lds-ring div:nth-child(2) {
-    animation-delay: -0.3s;
-  }
-  .lds-ring div:nth-child(3) {
-    animation-delay: -0.15s;
-  }
-  @keyframes lds-ring {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-  
-
-
-
-.pin-zoom-modal-delete {
+.pinZoomModal-delete {
     position: fixed;
     width: 24px;
     height: 24px;
@@ -160,11 +118,11 @@
     border: none;
     opacity: 0.8;
 }
-.pin-zoom-modal-delete:hover{
+.pinZoomModal-delete:hover{
     opacity: 1;
 }
 
-.pin-zoom-modal-site-link {
+.pinZoomModal-site-link {
     position: fixed;
     width: 24px;
     height: 24px;
@@ -177,11 +135,11 @@
     opacity: 0.8;
 }
 
-.pin-zoom-modal-site-link:hover{
+.pinZoomModal-site-link:hover{
     opacity: 1;
 }  
 
-.pin-zoom-modal-edit {
+.pinZoomModal-edit {
     position: fixed;
     width: 24px;
     height: 24px;
@@ -194,16 +152,13 @@
     opacity: 0.8;
 }
 
-.pin-zoom-modal-edit {
+.pinZoomModal-edit {
     opacity: 1;
 }
 
-#loader:after {
-    border-left-color: #3273dc;
-    border-bottom-color: #3273dc;
-}
 
-#pin-zoom-modal .pin-zoom-modal-description {
+
+#pinZoomModal .pinZoomModal-description {
     position: fixed;
     height: 24px;
     left: 20px;
@@ -215,15 +170,15 @@
     text-overflow: ellipsis;
 }
 
-#pin-zoom-modal .pin-zoom-modal-description:hover {
+#pinZoomModal .pinZoomModal-description:hover {
     cursor: pointer;
 }
 
-#pin-zoom-modal .pin-zoom-modal-full-description {
+#pinZoomModal .pinZoomModal-full-description {
     display: none;
 }
 
-#pin-zoom-modal .pin-zoom-modal-hide-full-description {
+#pinZoomModal .pinZoomModal-hide-full-description {
     display: block;
     height: 16px;
     width: 16px;
@@ -234,11 +189,37 @@
     margin-bottom: 8px;
 }
 
-#pin-zoom-modal .pin-zoom-modal-full-description.pin-zoom-modal-full-description-open {
+#pinZoomModal .pinZoomModal-full-description.pinZoomModal-full-description-open {
     display: block;
     position: fixed;
     left: 0px;
     bottom: 0px;
     background-color: #eeeeee;
     padding: 20px;
+}
+
+
+#loader:after {
+    border-left-color: #3273dc;
+    border-bottom-color: #3273dc;
+}
+
+#loader-mobile {
+    display: none;
+}
+
+@media (max-width: 1023px) {
+    #loader-desktop {
+        display: none;
+    }
+
+    #burger-mobile {
+        margin-left: 0;
+    }
+
+    #loader-mobile {
+        display: block;
+        position: relative;
+        margin-left: auto;
+    }
 }

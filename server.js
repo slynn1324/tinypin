@@ -26,8 +26,9 @@ const SERVER_ERROR = {status: "error", error: "server error"};
 initDb();
 
 // list boards
-app.get("/api/boards", (req, res) => {
+app.get("/api/boards", async (req, res) => {
     try{
+        await sleep(1000);
         let boards = db.prepare("SELECT * FROM boards").all();
 
         for( let i = 0; i < boards.length; ++i ){
