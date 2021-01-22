@@ -46,15 +46,17 @@
 }
 
 #pin-zoom-modal .modal-content {
-    height: 90%;
+    /* height: 90%; */
+    height: calc(100% - 120px);
+    min-height: 50px;
     width: 90%;
 }
 
-#pin-zoom-modal .modal-content p {
+#pin-zoom-modal .modal-content > p {
     height: 100%;
 }
 
-#pin-zoom-modal .modal-content p img {
+#pin-zoom-modal .modal-content > p > img {
     height: 100%;
     width: 100%;
     margin-left: auto;
@@ -199,4 +201,44 @@
 #loader:after {
     border-left-color: #3273dc;
     border-bottom-color: #3273dc;
+}
+
+#pin-zoom-modal .pin-zoom-modal-description {
+    position: fixed;
+    height: 24px;
+    left: 20px;
+    bottom: 20px;   
+    color: #eeeeee;
+    width: 50%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#pin-zoom-modal .pin-zoom-modal-description:hover {
+    cursor: pointer;
+}
+
+#pin-zoom-modal .pin-zoom-modal-full-description {
+    display: none;
+}
+
+#pin-zoom-modal .pin-zoom-modal-hide-full-description {
+    display: block;
+    height: 16px;
+    width: 16px;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjMzMzMzMzIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWw6c3BhY2U9InByZXNlcnZlIiB2ZXJzaW9uPSIxLjEiIHN0eWxlPSJzaGFwZS1yZW5kZXJpbmc6Z2VvbWV0cmljUHJlY2lzaW9uO3RleHQtcmVuZGVyaW5nOmdlb21ldHJpY1ByZWNpc2lvbjtpbWFnZS1yZW5kZXJpbmc6b3B0aW1pemVRdWFsaXR5OyIgdmlld0JveD0iMCAwIDY2OCAzNzUiIHg9IjBweCIgeT0iMHB4IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCI+PGRlZnM+PHN0eWxlIHR5cGU9InRleHQvY3NzIj4KICAgCiAgICAuZmlsMCB7ZmlsbDojMzMzMzMzfQogICAKICA8L3N0eWxlPjwvZGVmcz48Zz48cGF0aCBjbGFzcz0iZmlsMCIgZD0iTTM2MyAzNjNsMjkzIC0yOTJjMTYsLTE3IDE2LC00MyAwLC01OSAtMTYsLTE2IC00MywtMTYgLTU5LDBsLTI2MyAyNjMgLTI2MyAtMjYzYy0xNywtMTYgLTQzLC0xNiAtNTksMCAtMTYsMTYgLTE2LDQyIDAsNTlsMjkyIDI5MmMxNywxNiA0MywxNiA1OSwweiI+PC9wYXRoPjwvZz48L3N2Zz4=');
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+#pin-zoom-modal .pin-zoom-modal-full-description.pin-zoom-modal-full-description-open {
+    display: block;
+    position: fixed;
+    left: 0px;
+    bottom: 0px;
+    background-color: #eeeeee;
+    padding: 20px;
 }

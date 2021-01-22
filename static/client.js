@@ -21,7 +21,8 @@ const store = new Reef.Store({
         },
         pinZoom: {
             active: false,
-            pin: null
+            pin: null,
+            fullDescriptionOpen: false
         },
         about: {
             active: false
@@ -194,6 +195,7 @@ const actions = {
     closePinZoomModal: () => {
         store.data.pinZoom.active = false;
         store.data.pinZoom.pinId = null;
+        store.data.pinZoom.fullDescriptionOpen = false;
     },
     movePinZoomModalLeft: () => {
 
@@ -318,6 +320,12 @@ const actions = {
         }
 
         store.data.loading--;
+    },
+    pinZoomShowFullDescription: () => {
+        store.data.pinZoom.fullDescriptionOpen = true;
+    },
+    pinZoomHideFullDescription: () => {
+        store.data.pinZoom.fullDescriptionOpen = false;
     }
 }
 
@@ -625,12 +633,24 @@ const pinZoomModal = new Reef("#pin-zoom-modal", {
                 <div class="modal-content">
                     <p>
                         <img src="${data.pinZoom.active ? getOriginalImagePath(data.pinZoom.pin.id) : ''}" />
-                    </p>
+                    </p>                   
                 </div>
                 <button class="modal-close is-large" aria-label="close" data-onclick="closePinZoomModal"></button>
                 ${siteLink}
                 <a class="pin-zoom-modal-edit" data-onclick="editPin"></a>
                 <a class="pin-zoom-modal-delete" data-onclick="deletePin"></a>
+                
+                <div class="pin-zoom-modal-description" data-onclick="pinZoomShowFullDescription">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
+                
+                <div class="pin-zoom-modal-full-description ${data.pinZoom.fullDescriptionOpen ? 'pin-zoom-modal-full-description-open' : ''}">
+                    <div>
+                        <a class="pin-zoom-modal-hide-full-description" data-onclick="pinZoomHideFullDescription">&nbsp;</a>
+                    </div>
+                    <div class="content">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    </div>
+                </div>
+                
             </div>
         `;
     },
