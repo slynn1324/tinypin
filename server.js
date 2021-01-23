@@ -1,31 +1,78 @@
+const yargs = require('yargs');
 const express = require('express');
 const bodyParser = require('body-parser');
-const db = require('better-sqlite3')('data.db') //, {verbose:console.log});
+const betterSqlite3 = require('better-sqlite3');
+// const db = require('better-sqlite3') //, {verbose:console.log});
 const http = require('http');
 const https = require('https');
 const sharp = require('sharp');
 const fs = require('fs').promises;
+const path = require('path');
 const fetch = require('node-fetch');
 
-const IMAGE_PATH = "./images";
+
+const argv = yargs
+    .option('slow', {
+        alias: 's',
+        description: 'delay each request this many milliseconds for testing',
+        type: 'number'
+    })
+    .option('image-path', {
+        alias: 'i',
+        description: 'base path to store images',
+        type: 'string',
+        default: './images'
+    })
+    .option('db-path', {
+        alias: 'd',
+        description: 'path to sqlite database file',
+        type: 'string',
+        default: 'tinypin.db'
+    })
+    .option('port', {
+        alias: 'p',
+        description: 'http server port',
+        type: 'number',
+        default: 3000
+    })
+    .help().alias('help', 'h')
+    .argv;
 
 
+const DB_PATH = path.resolve(argv['db-path']);
+const IMAGE_PATH = path.resolve(argv['image-path']);
+const PORT = argv.port;
+
+console.log('tinypin starting...');
+console.log('');
+console.log('configuration:');
+console.log(`  port: ${PORT}`);
+console.log(`  database path: ${DB_PATH}`);
+console.log(`  image path: ${IMAGE_PATH}`)
+if ( argv.slow ){
+    console.log(`  slow mode delay: ${argv.slow}`);
+}
+console.log('');
+
+
+const db = betterSqlite3(DB_PATH);
 // express config
 const app = express();
-const port = 3000;
 app.use(express.static('static'));
 app.use(express.static('images'));
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
 app.set('json spaces', 2);
 
-// emulate slow down
-// app.use( (req,res,next) => {
-//     console.log("slow...");
-//     setTimeout(() => {
-//         next();
-//     }, 2000);
-// });
+//emulate slow down
+if ( argv.slow ){
+    app.use( (req,res,next) => {
+        console.log("slow...");
+        setTimeout(() => {
+            next();
+        }, 2000);
+    });
+}
 
 const OK = {status: "ok"};
 const NOT_FOUND = {status: "error", error: "not found"};
@@ -58,7 +105,6 @@ app.get("/api/boards", async (req, res) => {
 // get board
 app.get("/api/boards/:boardId", async (req, res) => {
     try{
-
 
         let board = db.prepare("SELECT * FROM boards WHERE id = ?").get(req.params.boardId);
         if ( board ){
@@ -264,11 +310,14 @@ app.delete("/api/pins/:pinId", async (req, res) => {
 
 
 // start listening
-app.listen(port, () => {
-    console.log(`tinypin is running at http://localhost:${port}`)
+app.listen(PORT, () => {
+    console.log(`tinypin is running at http://localhost:${PORT}`);
+    console.log('');
 });
 
 function initDb(){   
+
+    console.log("initializing database...");
 
     db.prepare(`
     CREATE TABLE IF NOT EXISTS migrations (
@@ -281,7 +330,7 @@ function initDb(){
 
     if ( !schemaVersion || schemaVersion < 1 ){
 
-        console.log("Running migration to version 1");
+        console.log("  running migration v1");
 
         db.prepare(`
         CREATE TABLE IF NOT EXISTS boards (
@@ -308,15 +357,13 @@ function initDb(){
         )
         `).run();
 
-        db.prepare(`
-            INSERT INTO boards (id, name, createDate) VALUES (0, 'Default Board', ?)
-        `).run(new Date().toISOString());
-
         db.prepare("INSERT INTO migrations (id, createDate) VALUES ( @id, @createDate )").run({id:1, createDate: new Date().toISOString()});
 
-    } else {
-        console.log("Database schema v" + schemaVersion + " is up to date.");
+        schemaVersion = 1;
     }
+
+    console.log(`database ready - schema version v${schemaVersion}`);
+    console.log('');
 
 }
 

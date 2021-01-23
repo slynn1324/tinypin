@@ -1,10 +1,16 @@
 {
-    "name": "TinyPin Plugin",
+    "name": "add to tinypin",
     "version": "1.0",
-    "description": "TinyPin context plugin",
+    "description": "add to tinypin context menu plugin",
     "manifest_version": 2,
     "background" : { "scripts": ["background.js"] },
     "permissions" : [
         "contextMenus"
-    ]
+    ],
+    "icons": {
+        "16" : "icon16.png",
+        "32" : "icon32.png",
+        "48" : "icon48.png",
+        "128" : "icon128.png"
+    }
   }

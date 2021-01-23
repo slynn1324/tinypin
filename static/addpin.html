@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>tinypin</title>
+        <meta charset="utf-8">
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+        <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+        <link rel="manifest" href="icons/site.webmanifest">
+        <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+        <link rel="shortcut icon" href="icons/favicon.ico">
+        <meta name="msapplication-TileColor" content="#da532c">
+        <meta name="msapplication-config" content="icons/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="stylesheet" href="bulma-custom.css" />
+        <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css" />-->
+        <link rel="stylesheet" href="client.css" />               
+    </head>
+    <body>
+        <div id="app"></div>
+
+        <!-- <script src="pulltorefresh.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/reefjs/dist/reef.min.js"></script>
+
+        
+        <script src="reef-bootstrap.js"></script>
+        <script src="reef-databind.js"></script>
+        
+
+        <!-- <script src="utils.js"></script> -->
+
+        <!-- <script src="client.js"></script> -->
+        <!-- <script src="components/addpin.js"></script>
+        <script src="addpin-app.js"></script> -->
+
+        <script>
+Reef.debug(true);
+
+app.addSetter("render", (data) => {
+    appComponent.render();
+});
+
+app.addSetter("loader.show", (data) => {
+    data.loading++;
+});
+
+app.addSetter("loader.hide", (data) => {
+    data.loading--;
+});
+
+app.addSetter("hash.parse", (data) => {
+
+    let qs = window.location.hash.substr(1);
+
+    let obj = {};
+    let parts = qs.split("&");
+    for ( let i = 0; i < parts.length; ++i ){
+        let kv = parts[i].split("=");
+        if ( kv.length == 2 ){
+            let key = decodeURIComponent(kv[0]);
+            let value = decodeURIComponent(kv[1]);
+            obj[key] = value;
+        }
+    }
+
+
+    data.hash = obj;
+
+    if ( data.hash.i ){
+        data.addPinModal.imageUrl = data.hash.i;
+        data.addPinModal.previewImageUrl = data.hash.i;
+        data.addPinModal.siteUrl = data.hash.s;
+    }
+
+});
+
+app.addSetter("load.boards", async (data) => {
+
+    store.do("loader.show");
+
+    let res = await fetch("/api/boards");
+    data.boards = await res.json();
+
+    data.initialized = true;
+
+    data.addPinModal.boardId = data.boards[0].id;
+
+    store.do("loader.hide");
+});
+
+app.addSetter('addPinModal.updatePreview', (data) => {
+    console.log("update preview");
+    if ( data.addPinModal.imageUrl.startsWith("http") ){
+        ( async() => {
+            let res = await fetch(data.addPinModal.imageUrl, {
+                mode: 'no-cors',
+                method: "HEAD"
+            });
+            if ( res.status = 200 ){
+                data.addPinModal.previewImageUrl = data.addPinModal.imageUrl;
+            }
+            store.do("render");
+        })();
+    } else {
+        data.addPinModal.previewImageUrl = null;
+    }
+});
+
+app.addGetter('addPinModal.isValid', (data) => {
+
+if ( data.addPinModal.boardId == "new"){
+    if ( !data.addPinModal.newBoardName ){
+        return false;
+    } else if ( data.addPinModal.newBoardName.trim().length < 1 ){
+        return false;
+    }
+}
+
+if ( !data.addPinModal.previewImageUrl ){
+    return false;
+}
+
+return true;
+});
+
+app.addSetter('addPinModal.save', async (data) => {
+
+    data.addPinModal.saveInProgress = true;
+
+    let boardId = data.addPinModal.boardId;
+
+    let newBoard = null;
+
+    if ( boardId == "new" ){
+        let res = await fetch('api/boards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                "name": data.addPinModal.newBoardName
+            })
+        });
+
+        if ( res.status == 200 ){
+            newBoard = await res.json();
+            boardId = newBoard.id;
+            data.boards.push(newBoard);
+        }
+    }
+
+    let postData = {
+        boardId: boardId,
+        imageUrl: data.addPinModal.imageUrl,
+        siteUrl: data.addPinModal.siteUrl,
+        description: data.addPinModal.description
+    };
+
+    let res = await fetch('api/pins', {
+        method: 'POST',
+        headers: {
+            'Content-Type': "application/json"
+        },
+        body: JSON.stringify(postData)
+    });
+
+    if ( res.status == 200 ){
+        window.close();
+    } 
+
+    store.do("render");
+    
+});
+
+
+const store = new Reef.Store({
+    data: {
+        loading: 0,
+        hash: null,
+        boards: [],
+        addPinModal: {
+            pinId: null,
+            active: false,
+            boardId: "",
+            newBoardName: null,
+            imageUrl: "",
+            previewImageUrl: null,
+            siteUrl: "",
+            description: "",
+            saveInProgress: false
+        },
+        initialized: false
+    },
+    getters: app.getGetters(),
+    setters: app.getSetters()
+});
+
+app.freeze();
+
+const appComponent = new Reef("#app", {
+    store: store,
+    template: (data) => {
+
+        if ( !data.initialized ){
+            return `<div style="margin-top: 20px; margin-left: auto; margin-right: auto;">
+                <div id="loader" class="button is-text is-loading"></div>
+            </div>`;
+        }
+
+        let imagePlaceholder = 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22300%22%3E%3Crect%20x%3D%222%22%20y%3D%222%22%20width%3D%22300%22%20height%3D%22300%22%20style%3D%22fill%3A%23dedede%3B%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-size%3D%2218%22%20text-anchor%3D%22middle%22%20alignment-baseline%3D%22middle%22%20font-family%3D%22monospace%2C%20sans-serif%22%20fill%3D%22%23555555%22%3Eimage%3C%2Ftext%3E%3C%2Fsvg%3E';
+
+        let options = "";
+        for ( let i = 0; i < data.boards.length; ++i ){
+            options += `<option value="${data.boards[i].id}">${data.boards[i].name}</option>`;
+        }
+
+        let newBoardField = '';
+        if ( data.addPinModal.boardId == "new" ){
+            newBoardField = /*html*/`
+            <div class="field">
+                <label class="label">Board Name</label>
+                <div class="control">
+                    <input class="input" type="text" data-bind="addPinModal.newBoardName" />
+                </div>
+            </div>
+            `;
+        }
+
+        return /*html*/`
+        <div id="addPinModal">
+        <div class="modal is-active">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Add Pin</p>
+                    <div id="loader" class="button is-text ${data.loading ? 'is-loading' : ''}"></div>
+                </header>
+                <section class="modal-card-body">
+                    <div class="add-pin-flex">
+                        <div class="add-pin-flex-left">
+                            <img id="add-pin-modal-img" src="${data.addPinModal.previewImageUrl ? data.addPinModal.previewImageUrl : imagePlaceholder}" />
+                        </div>
+                        <div class="add-pin-flex-right">
+                            <form>
+                                
+                                <div class="field">
+                                    <label class="label">Board</label>
+                                    <div class="select">
+                                        <select data-bind="addPinModal.boardId">
+                                            ${options}
+                                            <option value="new">Create New Board</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                ${newBoardField}
+
+                                <div class="field">
+                                    <label class="label">Image Url</label>
+                                    <div class="control">
+                                        <input class="input" type="text" data-bind="addPinModal.imageUrl" data-onblur="addPinModal.updatePreview" ${data.hash.i ? 'disabled' : ''}/>
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label">Website Url</label>
+                                    <div class="control">
+                                        <input class="input" type="text" data-bind="addPinModal.siteUrl" />
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label">Description</label>
+                                    <div class="control">
+                                        <textarea class="textarea" data-bind="addPinModal.description"></textarea>
+                                    </div>
+                                </div>
+
+                            </form> 
+                        </div>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-success ${data.addPinModal.saveInProgress ? 'is-loading' : ''}" ${!store.get('addPinModal.isValid') || data.addPinModal.saveInProgress  ? 'disabled' : ''} data-onclick="addPinModal.save">Add Pin</button>
+                    <button class="button is-light" ${data.addPinModal.saveInProgress ? 'disabled' : '' } onclick="window.close()">Cancel</button>
+                </footer>
+            </div>
+        </div></div>`;
+        
+    }
+});
+
+// attach all the child components
+for (const [name, f] of Object.entries(app.getComponents())) {
+    let c = f(store);
+    if ( !c ){
+        throw(new Error(`component ${name} did not return a Reef component`));
+    } else {
+        appComponent.attach(c);
+    }
+}
+
+document.addEventListener('click', (el) => {
+
+    let target = el.target.closest('[data-onclick]');
+    if (target) {
+        let action = target.getAttribute('data-onclick');
+        if (action) {
+            try{
+                store.do(action, target);
+            } catch (err){
+                console.error(`Error invoking ${action}:`, err);
+            }
+        }
+    }
+
+});
+
+// focusout bubbles while 'blur' does not.  
+document.addEventListener('focusout', (el) => {
+let target = el.target.closest('[data-onblur]');
+if ( target ){
+    let method = target.getAttribute('data-onblur');
+    if ( method ) {
+        store.do(method, target);
+    }
+}
+});
+
+ 
+store.do('hash.parse');
+
+store.do('load.boards');
+
+Reef.databind(appComponent);
+appComponent.render();
+
+function parseHash(){
+
+  
+}
+
+
+        </script>
+
+
+    </body>
+
+</html>
