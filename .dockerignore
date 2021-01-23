@@ -1,0 +1,6 @@
+*.db
+*.psd
+*.crx
+*.pem
+.gitignore
+.git

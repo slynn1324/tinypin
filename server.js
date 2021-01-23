@@ -10,6 +10,17 @@ const fs = require('fs').promises;
 const path = require('path');
 const fetch = require('node-fetch');
 
+process.on('SIGINT', () => {
+    console.info('ctrl+c detected, exiting tinypin');
+    console.info('goodbye.');
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.info('sigterm detected, exiting tinypin');
+    console.info('goodbye.');
+    process.exit(0);
+});
 
 const argv = yargs
     .option('slow', {
@@ -49,8 +60,10 @@ console.log('configuration:');
 console.log(`  port: ${PORT}`);
 console.log(`  database path: ${DB_PATH}`);
 console.log(`  image path: ${IMAGE_PATH}`)
-if ( argv.slow ){
-    console.log(`  slow mode delay: ${argv.slow}`);
+
+const SLOW = argv.slow || parseInt(process.env.TINYPIN_SLOW);
+if ( SLOW ){
+    console.log(`  slow mode delay: ${SLOW}`);
 }
 console.log('');
 
@@ -59,18 +72,18 @@ const db = betterSqlite3(DB_PATH);
 // express config
 const app = express();
 app.use(express.static('static'));
-app.use(express.static('images'));
+app.use(express.static(IMAGE_PATH));
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
 app.set('json spaces', 2);
 
 //emulate slow down
-if ( argv.slow ){
+if ( SLOW ){
     app.use( (req,res,next) => {
         console.log("slow...");
         setTimeout(() => {
             next();
-        }, 2000);
+        }, SLOW);
     });
 }
 
