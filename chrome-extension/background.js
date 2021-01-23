@@ -14,7 +14,41 @@ function getClickHandler() {
         var left = (screen.width/2)-(w/2);
         var top = (screen.height/2)-(h/2); 
 
-        var q = "i=" + encodeURIComponent(info.srcUrl) + "&s=" + encodeURIComponent(tab.url);
+        let s = "";
+        if ( info.linkUrl ){
+          s = info.linkUrl;
+
+          // strip the google images redirect 
+          if ( s.startsWith("https://www.google.com/url?") ){
+              let parts = s.split("?");
+              alert("parts length= " + parts.length);
+              if ( parts.length == 2 ){
+                
+                let params = parts[1].split("&");
+                
+                for( let i = 0; i < params.length; ++i ){
+                    let kv = params[i].split("=");
+
+                    alert(JSON.stringify(kv));
+
+                    if ( kv.length == 2 ){
+                      if ( kv[0] == "url" ){
+                        s = decodeURIComponent(kv[1]);
+                      }
+                    }
+                }
+              }
+          }
+
+          s = encodeURIComponent(s);
+
+        } else {
+          s = encodeURIComponent(info.pageUrl);
+        }
+
+
+
+        var q = "i=" + encodeURIComponent(info.srcUrl) + "&s=" + s;
 
         // The srcUrl property is only available for image elements.
         var url = 'http://localhost:3000/addpin.html#' + q;

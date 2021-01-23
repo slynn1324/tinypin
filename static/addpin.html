@@ -87,7 +87,11 @@ app.addSetter("load.boards", async (data) => {
 
     data.initialized = true;
 
-    data.addPinModal.boardId = data.boards[0].id;
+    if ( data.boards && data.boards.length > 0 ){
+        data.addPinModal.boardId = data.boards[0].id;
+    } else {
+        data.addPinModal.boardId = "new";
+    }
 
     store.do("loader.hide");
 });
