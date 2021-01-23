@@ -1,3 +1,8 @@
+app.addSetter('navbar.toggleMenu', (data) => {
+    data.menuOpen = !data.menuOpen;
+});
+
+
 app.addComponent('navbar', (store) => { return new Reef("#navbar", {
     store: store,
     template: (data) => {
@@ -24,7 +29,7 @@ app.addComponent('navbar', (store) => { return new Reef("#navbar", {
                     <div id="loader" class="button is-text ${data.loading ? 'is-loading' : ''}"></div>
                 </span>
 
-                <a id="burger-mobile" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+                <a id="burger-mobile" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-onclick="navbar.toggleMenu">
                     <span aria-hidden="true"></span>
                     <span aria-hidden="true"></span>
                     <span aria-hidden="true"></span>
@@ -32,10 +37,7 @@ app.addComponent('navbar', (store) => { return new Reef("#navbar", {
 
             </div>
 
-            <div class="navbar-menu is-active">
-                <!--<div class="navbar-start">
-                    ${boardName}
-                </div>-->
+            <div class="navbar-menu ${data.menuOpen ? 'is-active' : ''} ">
                 <div class="navbar-end">
                     
                     <span id="loader-desktop" class="navbar-item">

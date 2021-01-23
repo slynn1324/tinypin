@@ -57,6 +57,7 @@ let store = new Reef.Store({
             board: null
         },
         initialized: false,
+        menuOpen: false,
         loading: 0,
         boards: [],
         board: null,
