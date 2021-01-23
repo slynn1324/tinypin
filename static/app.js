@@ -109,12 +109,7 @@ const appComponent = new Reef("#app", {
                 <div id="brickwall" class="brickwall"></div>
             </div>
         </section>
-        <footer class="footer" id="footer">
-            <div class="content has-text-right">
-                <a data-onclick="aboutModal.open">about tinypin</a>
-            </div>
-        </footer>      
-
+        
         <div id="addPinModal"></div>
         <div id="pinZoomModal"></div>
         <div id="editBoardModal"></div>
@@ -137,6 +132,15 @@ for (const [name, f] of Object.entries(app.getComponents())) {
 
 
 document.addEventListener('click', (el) => {
+
+    // we always want to close the menu on click.  if we clicked an item,
+    // that will still trigger below
+    let burger = el.target.closest('.navbar-burger');
+    console.log("the burger is: ", burger);
+    if ( !burger ){
+        store.do('navbar.closeMenu');
+    }
+    
     let target = el.target.closest('[data-onclick]');
     if (target) {
         let action = target.getAttribute('data-onclick');
@@ -148,6 +152,7 @@ document.addEventListener('click', (el) => {
             }
         }
     }
+    
 });
 
 // focusout bubbles while 'blur' does not.  

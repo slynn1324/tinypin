@@ -204,7 +204,7 @@
     border-bottom-color: #3273dc;
 }
 
-#loader-mobile {
+/* #loader-mobile {
     display: none;
 }
 
@@ -222,4 +222,24 @@
         position: relative;
         margin-left: auto;
     }
+} */
+
+.navbar-burger{
+    margin-left: 0;
+}
+
+#loader-mobile {
+    display: block;
+    position: relative;
+    margin-left: auto;
+    margin-top: -2px;
+}
+
+.modal-card {
+    max-width: 95%;
+}
+
+.navbar-item span, .navbar-item img{
+    line-height: 24px;
+    vertical-align: middle;
 }
