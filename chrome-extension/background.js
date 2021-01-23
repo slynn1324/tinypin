@@ -21,15 +21,13 @@ function getClickHandler() {
           // strip the google images redirect 
           if ( s.startsWith("https://www.google.com/url?") ){
               let parts = s.split("?");
-              alert("parts length= " + parts.length);
+              
               if ( parts.length == 2 ){
                 
                 let params = parts[1].split("&");
                 
                 for( let i = 0; i < params.length; ++i ){
                     let kv = params[i].split("=");
-
-                    alert(JSON.stringify(kv));
 
                     if ( kv.length == 2 ){
                       if ( kv[0] == "url" ){
@@ -50,12 +48,24 @@ function getClickHandler() {
 
         var q = "i=" + encodeURIComponent(info.srcUrl) + "&s=" + s;
 
-        // The srcUrl property is only available for image elements.
-        var url = 'http://localhost:3000/addpin.html#' + q;
-    
-        // Create a new window to the info page.
-        // chrome.windows.create({ url: url, width: 520, height: 660 });
-        chrome.windows.create({ url: url, width: w, height: h, left: left, top: top, type: 'popup' });
+
+        chrome.storage.sync.get({
+            server: 'http://localhost:3000'
+        }, function(items){
+            let server = items.server;
+
+            if ( !server.endsWith('/') ){
+              server += '/';
+            }
+
+            var url = server + 'addpin.html#' + q;
+        
+            // Create a new window to the info page.
+            // chrome.windows.create({ url: url, width: 520, height: 660 });
+            chrome.windows.create({ url: url, width: w, height: h, left: left, top: top, type: 'popup' });
+        });
+
+        
     };
   };
   
