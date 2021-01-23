@@ -17,26 +17,16 @@
         <meta name="theme-color" content="#ffffff">
 
         <link rel="stylesheet" href="bulma-custom.css" />
-        <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css" />-->
         <link rel="stylesheet" href="client.css" />               
     </head>
     <body>
         <div id="app"></div>
 
-        <!-- <script src="pulltorefresh.js"></script> -->
-        <script src="https://cdn.jsdelivr.net/npm/reefjs/dist/reef.min.js"></script>
-
+        <script src="reef.min.js"></script>
         
         <script src="reef-bootstrap.js"></script>
         <script src="reef-databind.js"></script>
         
-
-        <!-- <script src="utils.js"></script> -->
-
-        <!-- <script src="client.js"></script> -->
-        <!-- <script src="components/addpin.js"></script>
-        <script src="addpin-app.js"></script> -->
-
         <script>
 Reef.debug(true);
 
@@ -340,12 +330,6 @@ store.do('load.boards');
 
 Reef.databind(appComponent);
 appComponent.render();
-
-function parseHash(){
-
-  
-}
-
 
         </script>
 
