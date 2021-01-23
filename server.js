@@ -153,10 +153,7 @@ app.get("/api/pins/:pinId", (req, res) => {
 app.post("/api/pins", async (req, res) => {
     try {
 
-        console.log(req.body);
-
         let image = await downloadImage(req.body.imageUrl);
-        console.log(image);
         
         let result = db.prepare(`INSERT INTO PINS (
             boardId, 
