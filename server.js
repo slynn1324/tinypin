@@ -9,6 +9,9 @@ const sharp = require('sharp');
 const fs = require('fs').promises;
 const path = require('path');
 const fetch = require('node-fetch');
+const crypto = require('crypto');
+const cookieParser = require('cookie-parser');
+const { send } = require('process');
 
 process.on('SIGINT', () => {
     console.info('ctrl+c detected, exiting tinypin');
@@ -71,11 +74,64 @@ console.log('');
 const db = betterSqlite3(DB_PATH);
 // express config
 const app = express();
-app.use(express.static('static'));
-app.use(express.static(IMAGE_PATH));
+app.use(express.static('public'));
+
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
 app.set('json spaces', 2);
+app.use(cookieParser());
+
+
+app.post("/login", (req, res) => {
+
+    let username = req.body.username;
+    let passhash = hashPassword(req.body.password);
+    
+    let result = db.prepare("SELECT * FROM users WHERE username = @username AND passhash = @passhash").get({username: username, passhash: passhash});
+
+    if ( result ){
+        console.log(`login ok user ${username}`);
+
+        res.cookie('s', JSON.stringify({
+            i: result.id,
+            u: result.username,
+            d: new Date().toISOString()
+        }));
+        
+        res.redirect("./");
+
+    } else {
+        console.log(`login failed for user ${username}`);
+        res.redirect("/login.html#nope");
+    }
+
+});
+
+// auth -- if the cookie is set exctract the user info, otherwise redirect to /login.html
+app.use( (req, res, next) => {
+
+    // todo - allow basic auth for apis?
+    let s = req.cookies.s;
+
+    if ( s ){
+        s = JSON.parse(s);
+        req.user = {
+            id: s.i,
+            name: s.u
+        }
+
+        next();
+    
+    } else {
+        console.log("not logged in");
+        res.redirect("/login.html"); // this means we have issues with a context path, but is needed for image redirects to work
+    }
+
+});
+
+
+app.use(express.static('static'));
+app.use(express.static(IMAGE_PATH));
 
 //emulate slow down
 if ( SLOW ){
@@ -93,6 +149,7 @@ const ALREADY_EXISTS = {status: "error", error: "already exists"};
 const SERVER_ERROR = {status: "error", error: "server error"};
 
 initDb();
+const passwordSalt = getPasswordSalt();
 
 // list boards
 app.get("/api/boards", async (req, res) => {
@@ -100,7 +157,7 @@ app.get("/api/boards", async (req, res) => {
         let boards = db.prepare("SELECT * FROM boards").all();
 
         for( let i = 0; i < boards.length; ++i ){
-            let result = db.prepare("SELECT id FROM pins WHERE boardId = ? order by createDate limit 1").get(boards[i].id);
+            let result = db.prepare("SELECT id FROM pins WHERE userId = @userId and boardId = @boardId order by createDate limit 1").get({userId:req.user.id, boardId:boards[i].id});
             if ( result ) {
                 boards[i].titlePinId = result.id;
             } else {
@@ -119,10 +176,10 @@ app.get("/api/boards", async (req, res) => {
 app.get("/api/boards/:boardId", async (req, res) => {
     try{
 
-        let board = db.prepare("SELECT * FROM boards WHERE id = ?").get(req.params.boardId);
+        let board = db.prepare("SELECT * FROM boards WHERE userId = @userId and id = @boardId").get({userId:req.user.id, boardId:req.params.boardId});
         if ( board ){
 
-            board.pins = db.prepare("SELECT * FROM pins WHERE boardId = ?").all(req.params.boardId);
+            board.pins = db.prepare("SELECT * FROM pins WHERE userId = @userId and boardId = @boardId").all({userId:req.user.id, boardId:req.params.boardId});
 
             res.send(board);
         } else {
@@ -137,9 +194,9 @@ app.get("/api/boards/:boardId", async (req, res) => {
 // create board
 app.post('/api/boards', (req, res) => {
     try{
-        let result = db.prepare("INSERT INTO boards (name, createDate) VALUES (@name, @createDate)").run({name: req.body.name, createDate: new Date().toISOString()});
+        let result = db.prepare("INSERT INTO boards (name, userId, createDate) VALUES (@name, @userId, @createDate)").run({name: req.body.name, userId: req.user.id, createDate: new Date().toISOString()});
         let id = result.lastInsertRowid;
-        let board = db.prepare("SELECT * FROM boards WHERE id = ?").get(id);
+        let board = db.prepare("SELECT * FROM boards WHERE userId = @userId and id = @boardId").get({userId: req.user.id, boardId: id});
         board.titlePinId = 0;
         res.send(board);
         console.log(`Created board#${id} ${req.body.name}`);
@@ -157,7 +214,7 @@ app.post('/api/boards', (req, res) => {
 // update board
 app.post("/api/boards/:boardId", (req, res) =>{
     try{
-        let result = db.prepare("UPDATE boards SET name = @name WHERE id = @boardId").run({name: req.body.name, boardId: req.params.boardId});
+        let result = db.prepare("UPDATE boards SET name = @name WHERE userId = @userId and id = @boardId").run({name: req.body.name, userId: req.user.id, boardId: req.params.boardId});
         if ( result.changes == 1 ){
             res.send(OK);
         } else {
@@ -173,14 +230,14 @@ app.post("/api/boards/:boardId", (req, res) =>{
 app.delete("/api/boards/:boardId", async (req, res) => {
     try{     
 
-        let pins = db.prepare("SELECT id FROM pins WHERE boardId = ?").all(req.params.boardId);
+        let pins = db.prepare("SELECT id FROM pins WHERE userId = @userId and boardId = @boardId").all({userId:req.user.id, boardId:req.params.boardId});
         for ( let i = 0; i < pins.length; ++i ){
             await fs.unlink(getThumbnailImagePath(pins[i].id).file);
             await fs.unlink(getOriginalImagePath(pins[i].id).file);
         }
 
-        let result = db.prepare("DELETE FROM pins WHERE boardId = ?").run(req.params.boardId);
-        result = db.prepare("DELETE FROM boards WHERE id = ?").run(req.params.boardId);
+        let result = db.prepare("DELETE FROM pins WHERE userId = @userId and boardId = @boardId").run({userId:req.user.id, boardId:req.params.boardId});
+        result = db.prepare("DELETE FROM boards WHERE userId = @userId and id = @boardId").run({userId: req.user.id, boardId:req.params.boardId});
 
         if ( result.changes == 1 ){
             res.send(OK);
@@ -196,7 +253,7 @@ app.delete("/api/boards/:boardId", async (req, res) => {
 // get pin
 app.get("/api/pins/:pinId", (req, res) => {
     try {
-        let pin = db.prepare('SELECT * FROM pins WHERE id = ?').get(req.params.pinId);
+        let pin = db.prepare('SELECT * FROM pins WHERE userId = @userId and id = @pinId').get({userId: req.user.id, pinId:req.params.pinId});
         if ( pin ){
             res.send(pin);
         } else {
@@ -224,6 +281,7 @@ app.post("/api/pins", async (req, res) => {
             originalWidth, 
             thumbnailHeight, 
             thumbnailWidth, 
+            userId,
             createDate
         ) VALUES (
             @boardId, 
@@ -235,6 +293,7 @@ app.post("/api/pins", async (req, res) => {
             @originalWidth, 
             @thumbnailHeight, 
             @thumbnailWidth, 
+            @userId,
             @createDate)
         `).run({
             boardId: req.body.boardId,
@@ -246,6 +305,7 @@ app.post("/api/pins", async (req, res) => {
             originalWidth: image.original.width,
             thumbnailHeight: image.thumbnail.height,
             thumbnailWidth: image.thumbnail.width,
+            userId: req.user.id,
             createDate: new Date().toISOString()
         });
         
@@ -262,7 +322,7 @@ app.post("/api/pins", async (req, res) => {
         console.log(`Saved thumbnail to: ${thumbnailImagePath.file}`);
 
         // return the newly created row
-        let pin = db.prepare("SELECT * FROM pins WHERE id = ?").get(id);
+        let pin = db.prepare("SELECT * FROM pins WHERE userId = @userId and id = @pinId").get({userId: req.user.id, pinId: id});
         res.send(pin);
 
     } catch (err) {
@@ -279,8 +339,9 @@ app.post("/api/pins/:pinId", (req,res) => {
             siteUrl = @siteUrl,
             description = @description,
             sortOrder = @sortOrder
-            WHERE id = @pinId
+            WHERE userId = @userId and id = @pinId
         `).run({
+            userId: req.user.id,
             pinId: req.params.pinId,
             boardId: req.body.boardId,
             siteUrl: req.body.siteUrl,
@@ -304,12 +365,12 @@ app.post("/api/pins/:pinId", (req,res) => {
 app.delete("/api/pins/:pinId", async (req, res) => {
     try {
 
-        await fs.unlink(getThumbnailImagePath(req.params.pinId).file);
-        await fs.unlink(getOriginalImagePath(req.params.pinId).file);
-
-        let result = db.prepare('DELETE FROM pins WHERE id = ?').run(req.params.pinId);
+        let result = db.prepare('DELETE FROM pins WHERE userId = @userId and id = @pinId').run({userId: req.user.id, pinId:req.params.pinId});
 
         if ( result.changes == 1 ){
+            await fs.unlink(getThumbnailImagePath(req.params.pinId).file);
+            await fs.unlink(getOriginalImagePath(req.params.pinId).file);
+
             console.log(`deleted pin#${req.params.pinId}`);
             res.send(OK);
         } else {
@@ -320,6 +381,38 @@ app.delete("/api/pins/:pinId", async (req, res) => {
         res.status(500).send(SERVER_ERROR);
     }
 });
+
+
+
+app.post("/create-account", (req, res) => {
+    
+    console.log(`creating user '${req.body.username}'`);
+
+    let passhash = hashPassword(req.body.password);
+    
+    let result = db.prepare('INSERT INTO users (username, passhash) VALUES (@username, @passhash)').run({username: req.body.username, passhash: passhash});
+
+    console.log(`  user pk = ${result.lastInsertRowid}`);
+
+    let c = {
+        i: result.lastInsertRowid,
+        u: req.body.username,
+        d: new Date().toISOString()
+    }
+
+    res.cookie('s', JSON.stringify(c));
+
+    res.redirect("create-account.html");
+    
+});
+
+app.get("/whoami", (req, res) => {
+    res.send(req.user);
+});
+
+function hashPassword(pw){
+    return crypto.createHash('sha256', passwordSalt).update(pw).digest('hex');
+}
 
 
 // start listening
@@ -346,14 +439,34 @@ function initDb(){
         console.log("  running migration v1");
 
         db.prepare(`
-        CREATE TABLE IF NOT EXISTS boards (
-            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
-            name TEXT NOT NULL UNIQUE, 
-            createDate TEXT)
+            CREATE TABLE users (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                passhash TEXT NOT NULL,
+                createDate TEXT
+            )
         `).run();
 
         db.prepare(`
-        CREATE TABLE IF NOT EXISTS pins (
+            CREATE TABLE properties (
+                key TEXT NOT NULL PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+        `).run();
+
+        db.prepare(`
+        CREATE TABLE boards (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+            name TEXT NOT NULL UNIQUE, 
+            userId INTEGER NOT NULL,
+            createDate TEXT,
+            
+            FOREIGN KEY (userId) REFERENCES users(id)
+            )
+        `).run();
+
+        db.prepare(`
+        CREATE TABLE pins (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             boardId INTEGER NOT NULL,
             imageUrl TEXT,
@@ -364,12 +477,15 @@ function initDb(){
             originalWidth INTEGER,
             thumbnailHeight INTEGER,
             thumbnailWidth INTEGER,
+            userId INTEGER NOT NULL,
             createDate TEXT,
 
-            FOREIGN KEY (boardId) REFERENCES boards(id)
+            FOREIGN KEY (boardId) REFERENCES boards(id),
+            FOREIGN KEY (userId) REFERENCES users(id)
         )
         `).run();
 
+        db.prepare("INSERT INTO properties (key, value) VALUES (@key, @value)").run({key: 'pwsalt', value: crypto.randomBytes(32).toString('hex')});
         db.prepare("INSERT INTO migrations (id, createDate) VALUES ( @id, @createDate )").run({id:1, createDate: new Date().toISOString()});
 
         schemaVersion = 1;
@@ -377,7 +493,10 @@ function initDb(){
 
     console.log(`database ready - schema version v${schemaVersion}`);
     console.log('');
+}
 
+function getPasswordSalt(){
+    return db.prepare('SELECT value FROM properties WHERE key = ?').get('pwsalt').value;
 }
 
 async function downloadImage(imageUrl){
