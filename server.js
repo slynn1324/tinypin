@@ -86,6 +86,7 @@ app.use(bodyParser.json());
 app.set('json spaces', 2);
 app.use(cookieParser());
 
+// auth helper functions
 function sendAuthCookie(res, c){
     res.cookie('s', encryptCookie(c), {maxAge: 315569520000}); // 10 years
 }
@@ -116,6 +117,7 @@ function decryptCookie(ciphertext){
     return JSON.parse(deciphered);
 }
 
+// handle auth
 app.use ( async (req, res, next) => {
 
     // skip auth for pub resources
@@ -211,8 +213,6 @@ app.use ( async (req, res, next) => {
 
 });
 
-app.use(express.static('static'));
-// app.use(express.static(IMAGE_PATH));
 
 // handle image serving, injecting the user id in the path to segregate users and control cross-user resource access
 app.use( (req, res, next) => {
@@ -229,6 +229,7 @@ app.use( (req, res, next) => {
 
 });
 
+app.use(express.static('static'));
 
 //emulate slow down
 if ( SLOW ){
@@ -245,7 +246,6 @@ const NOT_FOUND = {status: "error", error: "not found"};
 const ALREADY_EXISTS = {status: "error", error: "already exists"};
 const SERVER_ERROR = {status: "error", error: "server error"};
 
-initDb();
 
 // list boards
 app.get("/api/boards", async (req, res) => {
