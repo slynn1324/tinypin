@@ -42,6 +42,8 @@ app.addComponent('aboutModal', (store) => { return new Reef("#aboutModal", {
                         <br />
                         &nbsp;missing icon &raquo; <a href="https://materialdesignicons.com/icon/dots-square">dots-square by Jeff Hilnbrand</a>
                         <br />
+                        &nbsp;hidden icon &raquo; <a href="https://thenounproject.com/term/hidden/3543981/">hidden by vittorio longo from the Noun Project</a>
+                        <br />
                         <br />
                         server
                         <br />

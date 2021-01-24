@@ -106,13 +106,12 @@ Reef.databind = function(reef){
     let store = reef.store;
 
     if ( !store ){
-        console.log("Databind only works when using a store.");
+        console.error("Databind only works when using a store.");
         return;
     }
 
     // bind all elements on the page that have a data-bind item
     const bindData = debounce(() => {
-        console.log("bindData");
         let elems = el.querySelectorAll("[data-bind]");
 
         for ( let i = 0; i < elems.length; ++i ){
@@ -135,7 +134,6 @@ Reef.databind = function(reef){
             
                 // multiple selects need special handling
                 if ( elem.tagName == "SELECT" && elem.matches("[multiple]") ){
-                    console.log("multiple");
                     let options = elem.querySelectorAll("option");
                     for ( let i = 0; i < options.length; ++i ){
                         if ( val.indexOf(options[i].value) > -1 ){

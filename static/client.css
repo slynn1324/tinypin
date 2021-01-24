@@ -11,7 +11,7 @@
     margin: 0 5px 10px 5px;
 }
 
-.brick img {    
+.brick img.thumb {    
     width: 100%;
     height: auto;
     display: block;
@@ -40,7 +40,7 @@
     width: 100%;
 }
 
-.board-brick a img{
+.board-brick a img.thumb{
     height: 200px;
     object-fit: cover;
 }

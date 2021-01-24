@@ -1,6 +1,8 @@
 images
+images*
 node_modules
 tinypin.db
+tinypin.db*
 .DS_Store
 chrome-extension.crx
 chrome-extension.pem

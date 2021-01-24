@@ -2,6 +2,8 @@ app.addSetter('addPinModal.open', (data) => {
         
     if ( data.board ){
         data.addPinModal.boardId = data.board.id;
+    } else if ( window.localStorage.addPinLastBoardId ){
+        data.addPinModal.boardId = window.localStorage.addPinLastBoardId;
     } else if ( data.boards && data.boards.length > 0 ){
         data.addPinModal.boardId = data.boards[0].id;
     } else {
@@ -91,6 +93,7 @@ app.addSetter('addPinModal.save', async (data) => {
             newBoard.titlePinId = body.id;
         }
 
+        window.localStorage.addPinLastBoardId = boardId;
         store.do("addPinModal.close");
     } 
 

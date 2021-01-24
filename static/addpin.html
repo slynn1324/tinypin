@@ -77,7 +77,9 @@ app.addSetter("load.boards", async (data) => {
 
     data.initialized = true;
 
-    if ( data.boards && data.boards.length > 0 ){
+    if ( window.localStorage.addPinLastBoardId ){
+        data.addPinModal.boardId = window.localStorage.addPinLastBoardId;
+    } else if ( data.boards && data.boards.length > 0 ){
         data.addPinModal.boardId = data.boards[0].id;
     } else {
         data.addPinModal.boardId = "new";
@@ -87,7 +89,6 @@ app.addSetter("load.boards", async (data) => {
 });
 
 app.addSetter('addPinModal.updatePreview', (data) => {
-    console.log("update preview");
     if ( data.addPinModal.imageUrl.startsWith("http") ){
         ( async() => {
             let res = await fetch(data.addPinModal.imageUrl, {
@@ -161,6 +162,7 @@ app.addSetter('addPinModal.save', async (data) => {
     });
 
     if ( res.status == 200 ){
+        window.localStorage.addPinLastBoardId = boardId;
         window.close();
     } 
 
@@ -228,7 +230,7 @@ const appComponent = new Reef("#app", {
             <div class="modal-background"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">Add Pin</p>
+                    <p class="modal-card-title">Add Pin ${data.addPinModal.boardId}</p>
                     <div id="loader" class="button is-text ${data.loading ? 'is-loading' : ''}"></div>
                 </header>
                 <section class="modal-card-body">

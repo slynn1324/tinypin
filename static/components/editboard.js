@@ -1,10 +1,12 @@
 app.addSetter('editBoardModal.open', (data) => {
     data.editBoardModal.name = data.board.name;
+    data.editBoardModal.hidden = data.board.hidden;
     data.editBoardModal.active = true;
 });
 
 app.addSetter('editBoardModal.close', (data) => {
     data.editBoardModal.name = "";
+    data.editBoardModal.hidden = 0;
     data.editBoardModal.active = false;
 });
 
@@ -14,11 +16,17 @@ app.addSetter('editBoardModal.save', async (data) => {
 
     let boardId = data.board.id;
     let name = data.editBoardModal.name;
+    let hidden = data.editBoardModal.hidden;
 
     let idx = getBoardIndexById(boardId);
     if ( idx >= 0 ){
         data.boards[idx].name = name;
+        data.boards[idx].hidden = hidden;
+        
+    }
+    if ( data.board ){
         data.board.name = name;
+        data.board.hidden = hidden;
     }
 
     let res = await fetch(`/api/boards/${boardId}`, {
@@ -27,7 +35,8 @@ app.addSetter('editBoardModal.save', async (data) => {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            name: name
+            name: name,
+            hidden: hidden
         })
     });
 
@@ -105,6 +114,11 @@ app.addComponent('editBoardModal', (store) => { return new Reef("#editBoardModal
                             <input class="input" type="text" data-bind="editBoardModal.name" />
                         </div>
                     </div>
+
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="editBoardModal.hidden" value="1">
+                        Hidden
+                    </label>
                     
                 </section>
                 <footer class="modal-card-foot">

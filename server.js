@@ -200,6 +200,7 @@ app.use ( async (req, res, next) => {
 
     if ( !req.user ){
         res.redirect("/login");
+        return;
     }
 
     if ( req.method == "GET" && req.originalUrl == "/logout" ){
@@ -247,6 +248,10 @@ const ALREADY_EXISTS = {status: "error", error: "already exists"};
 const SERVER_ERROR = {status: "error", error: "server error"};
 
 
+app.get("/api/whoami", (req, res) => {
+    res.send({name: req.user.name});
+});
+
 // list boards
 app.get("/api/boards", async (req, res) => {
     try{
@@ -290,7 +295,7 @@ app.get("/api/boards/:boardId", async (req, res) => {
 // create board
 app.post('/api/boards', (req, res) => {
     try{
-        let result = db.prepare("INSERT INTO boards (name, userId, createDate) VALUES (@name, @userId, @createDate)").run({name: req.body.name, userId: req.user.id, createDate: new Date().toISOString()});
+        let result = db.prepare("INSERT INTO boards (name, userId, hidden, createDate) VALUES (@name, @userId, @hidden, @createDate)").run({name: req.body.name, userId: req.user.id, hidden: req.body.hidden, createDate: new Date().toISOString()});
         let id = result.lastInsertRowid;
         let board = db.prepare("SELECT * FROM boards WHERE userId = @userId and id = @boardId").get({userId: req.user.id, boardId: id});
         board.titlePinId = 0;
@@ -310,7 +315,7 @@ app.post('/api/boards', (req, res) => {
 // update board
 app.post("/api/boards/:boardId", (req, res) =>{
     try{
-        let result = db.prepare("UPDATE boards SET name = @name WHERE userId = @userId and id = @boardId").run({name: req.body.name, userId: req.user.id, boardId: req.params.boardId});
+        let result = db.prepare("UPDATE boards SET name = @name, hidden = @hidden WHERE userId = @userId and id = @boardId").run({name: req.body.name, hidden: req.body.hidden, userId: req.user.id, boardId: req.params.boardId});
         if ( result.changes == 1 ){
             res.send(OK);
         } else {
@@ -498,65 +503,102 @@ function initDb(){
     `).run();
 
     let schemaVersion = db.prepare('select max(id) as id from migrations').get().id;
+    let isNewDb = false;
+    let createdBackup = false;
 
     if ( !schemaVersion || schemaVersion < 1 ){
 
         console.log("  running migration v1");
+        isNewDb = true;
 
-        db.prepare(`
-            CREATE TABLE users (
-                id INTEGER NOT NULL PRIMARY KEY,
-                username TEXT NOT NULL UNIQUE,
-                key TEXT NOT NULL,
-                salt TEXT NOT NULL,
-                createDate TEXT
-            )
-        `).run();
+        db.transaction( () => {
 
-        db.prepare(`
-                CREATE TABLE properties (
-                    key TEXT NOT NULL UNIQUE PRIMARY KEY,
-                    value TEXT NOT NULL
+            db.prepare(`
+                CREATE TABLE users (
+                    id INTEGER NOT NULL PRIMARY KEY,
+                    username TEXT NOT NULL UNIQUE,
+                    key TEXT NOT NULL,
+                    salt TEXT NOT NULL,
+                    createDate TEXT
                 )
-        `).run();
+            `).run();
 
-        db.prepare(`
-        CREATE TABLE boards (
-            id INTEGER NOT NULL PRIMARY KEY, 
-            name TEXT NOT NULL UNIQUE, 
-            userId INTEGER NOT NULL,
-            createDate TEXT,
-            
-            FOREIGN KEY (userId) REFERENCES users(id)
+            db.prepare(`
+                    CREATE TABLE properties (
+                        key TEXT NOT NULL UNIQUE PRIMARY KEY,
+                        value TEXT NOT NULL
+                    )
+            `).run();
+
+            db.prepare(`
+            CREATE TABLE boards (
+                id INTEGER NOT NULL PRIMARY KEY, 
+                name TEXT NOT NULL UNIQUE, 
+                userId INTEGER NOT NULL,
+                createDate TEXT,
+                
+                FOREIGN KEY (userId) REFERENCES users(id)
+                )
+            `).run();
+
+            // autoincrement on pins so that pin ids are stable and are not reused.
+            // this allows for better caching of images
+            db.prepare(`
+            CREATE TABLE pins (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                boardId INTEGER NOT NULL,
+                imageUrl TEXT,
+                siteUrl TEXT,
+                description TEXT,
+                sortOrder INTEGER,
+                originalHeight INTEGER,
+                originalWidth INTEGER,
+                thumbnailHeight INTEGER,
+                thumbnailWidth INTEGER,
+                userId INTEGER NOT NULL,
+                createDate TEXT,
+
+                FOREIGN KEY (boardId) REFERENCES boards(id),
+                FOREIGN KEY (userId) REFERENCES users(id)
             )
-        `).run();
+            `).run();
 
-        // autoincrement on pins so that pin ids are stable and are not reused.
-        // this allows for better caching of images
-        db.prepare(`
-        CREATE TABLE pins (
-            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-            boardId INTEGER NOT NULL,
-            imageUrl TEXT,
-            siteUrl TEXT,
-            description TEXT,
-            sortOrder INTEGER,
-            originalHeight INTEGER,
-            originalWidth INTEGER,
-            thumbnailHeight INTEGER,
-            thumbnailWidth INTEGER,
-            userId INTEGER NOT NULL,
-            createDate TEXT,
+            db.prepare("INSERT INTO properties (key, value) VALUES (@key, @value)").run({key: "cookieKey", value: crypto.randomBytes(32).toString('hex')});
+            db.prepare("INSERT INTO migrations (id, createDate) VALUES ( @id, @createDate )").run({id:1, createDate: new Date().toISOString()});
 
-            FOREIGN KEY (boardId) REFERENCES boards(id),
-            FOREIGN KEY (userId) REFERENCES users(id)
-        )
-        `).run();
+            schemaVersion = 1;
 
-        db.prepare("INSERT INTO properties (key, value) VALUES (@key, @value)").run({key: "cookieKey", value: crypto.randomBytes(32).toString('hex')});
-        db.prepare("INSERT INTO migrations (id, createDate) VALUES ( @id, @createDate )").run({id:1, createDate: new Date().toISOString()});
+        })();
+    }
 
-        schemaVersion = 1;
+    if ( schemaVersion < 2 ){
+        console.log("  running migration v2");
+
+        if ( !isNewDb ){
+            let backupPath = DB_PATH + ".backup-" + new Date().toISOString();
+            console.log("    backing up to: " + backupPath);
+            db.prepare(`
+            VACUUM INTO ?
+            `).run(backupPath);
+            createdBackup = true;
+        }
+
+        db.transaction( () => {
+
+            db.prepare(`
+            ALTER TABLE boards ADD COLUMN hidden INTEGER
+            `).run();
+
+            db.prepare(`
+            UPDATE boards SET hidden = 0
+            `).run();
+
+            db.prepare(`
+            INSERT INTO migrations (id, createDate) VALUES ( @id, @createDate )
+            `).run({id:2, createDate: new Date().toISOString()});
+
+            schemaVersion = 2;
+        })();
     }
 
     console.log(`database ready - schema version v${schemaVersion}`);

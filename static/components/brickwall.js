@@ -1,3 +1,8 @@
+app.addSetter('brickwall.toggleHiddenBoards', (data) => {
+    data.showHiddenBoards = !data.showHiddenBoards;
+    window.localStorage.showHiddenBoards = data.showHiddenBoards;
+});
+
 app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
 
     store: store,
@@ -27,7 +32,8 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
 
         // TODO: check these breakpoints for iPhone
         let numberOfColumns = 1;
-        let width = el.offsetWidth;
+        
+        let width = window.innerWidth; //el.offsetWidth;
         // matching bulma breakpoints - https://bulma.io/documentation/overview/responsiveness/
         if( width >= 1216 ){
             numberOfColumns = 5;
@@ -37,6 +43,11 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
             numberOfColumns = 3;
         } else if ( width > 320 ){
             numberOfColumns = 2;
+        } 
+
+
+        if ( !data.hash.board && width < 400 ){
+            numberOfColumns = 1;
         }
         
         function createBrickForBoard(board){
@@ -46,29 +57,36 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
 
             let boardImage = null;
             if ( board.titlePinId > 0 ){
-                boardImage = `<img src="${getThumbnailImagePath(board.titlePinId)}" />`;
+                boardImage = `<img class="thumb" src="${getThumbnailImagePath(board.titlePinId)}" />`;
             } else {
-                boardImage = `<div class="board-brick-missing-thumbnail"><img src="${missingThumbnailSrc}" /></div>`;
+                boardImage = `<div class="board-brick-missing-thumbnail"><img class="thumb" src="${missingThumbnailSrc}" /></div>`;
             }
 
-            return /*html*/`
+            let hiddenBoardImage = '';
+            if ( board.hidden ){
+                hiddenBoardImage = '<img alt="(hidden)" style="width: 24px; height: 24px; vertical-align: middle;" src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjMDAwMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGRhdGEtbmFtZT0iTGF5ZXIgMSIgdmlld0JveD0iMCAwIDI0IDI0IiB4PSIwcHgiIHk9IjBweCI+PHRpdGxlPkFydGJvYXJkIDY8L3RpdGxlPjxwYXRoIGQ9Ik0xMiw2LjkyQTguNjUsOC42NSwwLDAsMSwxOS44NSwxMmE4LjYxLDguNjEsMCwwLDEtMTUuNywwQTguNjUsOC42NSwwLDAsMSwxMiw2LjkybTAtMkExMC42MiwxMC42MiwwLDAsMCwyLDEyYTEwLjYsMTAuNiwwLDAsMCwyMCwwQTEwLjYyLDEwLjYyLDAsMCwwLDEyLDQuOTJaIj48L3BhdGg+PHBhdGggZD0iTTE0LjIxLDExLjEyYTEuMzQsMS4zNCwwLDAsMS0xLjMzLTEuMzMsMS4zMSwxLjMxLDAsMCwxLC41Mi0xQTMuNDQsMy40NCwwLDAsMCwxMiw4LjQ2LDMuNTQsMy41NCwwLDEsMCwxNS41NCwxMmEzLjQ0LDMuNDQsMCwwLDAtLjI5LTEuNEExLjMxLDEuMzEsMCwwLDEsMTQuMjEsMTEuMTJaIj48L3BhdGg+PHBhdGggZD0iTTE5LDIwYTEsMSwwLDAsMS0uNzEtLjI5bC0xNC0xNEExLDEsMCwwLDEsNS43MSw0LjI5bDE0LDE0YTEsMSwwLDAsMSwwLDEuNDJBMSwxLDAsMCwxLDE5LDIwWiI+PC9wYXRoPjwvc3ZnPg==" />';
+            }
+
+            return { height: 1, template: /*html*/`
             <div class="brick board-brick">
                 <a href="#board=${board.id}">
                     ${boardImage}
-                    <div class="board-brick-name">${board.name}</div>
+                    <div class="board-brick-name">${board.name}
+                    ${hiddenBoardImage}
+                    </div>
                 </a>
             </div>
-            `;
+            `};
         }
 
         function createBrickForPin(board, pin){
-            return /*html*/`
+            return  { height: pin.thumbnailHeight, template: /*html*/`
             <div class="brick" >
                 <a data-pinid="${pin.id}" data-onclick="pinZoomModal.open">
-                    <img src="${getThumbnailImagePath(pin.id)}" width="${pin.thumbnailWidth}" height="${pin.thumbnailHeight}" />
+                    <img class="thumb" src="${getThumbnailImagePath(pin.id)}" width="${pin.thumbnailWidth}" height="${pin.thumbnailHeight}" />
                 </a>
             </div>
-            `;
+            `};
         }
 
         // create the brick elements
@@ -79,8 +97,10 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
                 bricks.push(createBrickForPin(data.board, data.board.pins[i]));
             }
         } else {
-            for ( let i = 0; i < data.boards.length; ++i ){           
-                bricks.push(createBrickForBoard(data.boards[i]));
+            for ( let i = 0; i < data.boards.length; ++i ){      
+                if ( data.showHiddenBoards || !data.boards[i].hidden ) {    
+                    bricks.push(createBrickForBoard(data.boards[i]));
+                }
             }
         }
        
@@ -96,7 +116,19 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
         // TODO: make this height aware
         // sort bricks into columns
         for ( let i = 0; i < bricks.length; ++i ){
-            columns[i % columns.length].bricks.push(bricks[i]);
+
+            // find shortest column
+            let shortestIndex = 0;
+            let shortestHeight = columns[0].height;
+            for ( let c = 1; c < columns.length; ++c ){
+                if ( columns[c].height < shortestHeight ){
+                    shortestIndex = c;
+                    shortestHeight = c.height;
+                }
+            }
+
+            columns[shortestIndex].bricks.push(bricks[i]);
+            columns[shortestIndex].height += bricks[i].height;
         }
     
 
@@ -107,7 +139,7 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
             result += '<div class="brickwall-column">';
 
             for ( let i = 0; i < columns[col].bricks.length; ++i ){
-                result += columns[col].bricks[i];
+                result += columns[col].bricks[i].template;
             }
 
             result += '</div>';

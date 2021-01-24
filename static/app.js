@@ -36,6 +36,15 @@ app.addSetter('load.board', async (data) => {
     store.do("loader.hide");
 });
 
+app.addSetter('load.user', async (data) => {
+    store.do("loader.show");
+
+    let res = await fetch("/api/whoami");
+    data.user = await res.json();
+
+    store.do("loader.hide");
+});
+
 app.addSetter("hash.update", (data) => {
     console.log("hash update");
     data.hash = parseQueryString(window.location.hash.substr(1));
@@ -59,6 +68,8 @@ let store = new Reef.Store({
         initialized: false,
         menuOpen: false,
         loading: 0,
+        user: null,
+        showHiddenBoards: window.localStorage.showHiddenBoards == "true" || false,
         boards: [],
         board: null,
         addPinModal: {
@@ -82,7 +93,8 @@ let store = new Reef.Store({
         },
         editBoardModal: {
             active: false,
-            name: ""
+            name: "",
+            hidden: 0
         },
         editPinModal: {
             active: false,
@@ -203,6 +215,7 @@ window.addEventListener('resize', (evt) => {
 
 Reef.databind(appComponent);
 
+store.do('load.user');
 store.do('load.boards');
 store.do('hash.update');
 

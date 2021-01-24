@@ -6,3 +6,6 @@
 .git
 docker-run.sh
 docker-build.sh
+images
+images*
+*.db*
