@@ -25,6 +25,7 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
             </div>`;
         }
 
+        // TODO: check these breakpoints for iPhone
         let numberOfColumns = 1;
         let width = el.offsetWidth;
         // matching bulma breakpoints - https://bulma.io/documentation/overview/responsiveness/
@@ -92,6 +93,7 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
             }
         }
 
+        // TODO: make this height aware
         // sort bricks into columns
         for ( let i = 0; i < bricks.length; ++i ){
             columns[i % columns.length].bricks.push(bricks[i]);
