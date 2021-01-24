@@ -90,18 +90,18 @@ app.post("/login", (req, res) => {
     let result = db.prepare("SELECT * FROM users WHERE username = @username AND passhash = @passhash").get({username: username, passhash: passhash});
 
     if ( result ){
-        console.log(`login ok user ${username}`);
+        console.log(`login ${username} ok`);
 
-        res.cookie('s', JSON.stringify({
+        sendAuthCookie(res,{
             i: result.id,
-            u: result.username,
+            u: req.body.username,
             d: new Date().toISOString()
-        }));
+        });   
         
         res.redirect("./");
 
     } else {
-        console.log(`login failed for user ${username}`);
+        console.log(`login ${username} failed`);
         res.redirect("/login.html#nope");
     }
 
@@ -114,20 +114,40 @@ app.use( (req, res, next) => {
     let s = req.cookies.s;
 
     if ( s ){
-        s = JSON.parse(s);
-        req.user = {
-            id: s.i,
-            name: s.u
-        }
+        try {
+            s = JSON.parse(s);
 
-        next();
+            if ( s.i && s.u ){
+                req.user = {
+                    id: s.i,
+                    name: s.u
+                }
+
+                next();
+            } else {
+                console.log(s);
+                console.error(`invalid cookie`);
+                failAuth(req,res);
+            }
+        } catch (err){
+            console.error(`error parsing cookie: `, err);
+            failAuth(req,res);
+        }
     
     } else {
-        console.log("not logged in");
-        res.redirect("/login.html"); // this means we have issues with a context path, but is needed for image redirects to work
+        // if it's an api or image request, just 401 -- otherwise redirect the browser
+        failAuth(req,res);
     }
 
 });
+
+function failAuth(req,res){
+    if ( req.originalUrl.startsWith("/api") || req.originalUrl.startsWith("/thumbnails") || req.originalUrl.startsWith("/originals") ){
+        res.status(401).send();
+    } else {
+        res.redirect("/login.html"); // this means we have issues with a context path, but is needed for image redirects to work
+    }
+}
 
 
 app.use(express.static('static'));
@@ -394,21 +414,28 @@ app.post("/create-account", (req, res) => {
 
     console.log(`  user pk = ${result.lastInsertRowid}`);
 
-    let c = {
+    sendAuthCookie(res, {
         i: result.lastInsertRowid,
         u: req.body.username,
         d: new Date().toISOString()
-    }
-
-    res.cookie('s', JSON.stringify(c));
+    });
 
     res.redirect("create-account.html");
-    
+});
+
+app.get("/logout", (req, res) => {
+    console.log(`logout user ${req.user.name}`);
+    res.cookie('s', '', {maxAge:0});
+    res.redirect("/login.html");
 });
 
 app.get("/whoami", (req, res) => {
     res.send(req.user);
 });
+
+function sendAuthCookie(res, c){
+    res.cookie('s', JSON.stringify(c), {maxAge: 315569520000}); // 10 years
+}
 
 function hashPassword(pw){
     return crypto.createHash('sha256', passwordSalt).update(pw).digest('hex');
