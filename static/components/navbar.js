@@ -76,8 +76,8 @@ app.addComponent('navbar', (store) => { return new Reef("#navbar", {
                     ${refreshItem}
 
                     <a class="navbar-item has-text-right" data-onclick="navbar.logout">
-                        <span>sign out</span>
-                        <img alt="sign out" width="32" height="32" src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjMDAwMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGRhdGEtbmFtZT0iTGF5ZXIgMSIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHg9IjBweCIgeT0iMHB4Ij48dGl0bGU+QXJ0Ym9hcmQgODQ8L3RpdGxlPjxnPjxwYXRoIGQ9Ik0yOCw4MkgzOFY3NEgyOGEyLDIsMCwwLDEtMi0yVjI4YTIsMiwwLDAsMSwyLTJIMzhWMThIMjhBMTAsMTAsMCwwLDAsMTgsMjhWNzJBMTAsMTAsMCwwLDAsMjgsODJaIj48L3BhdGg+PHBhdGggZD0iTTY2LDMyLjM0LDYwLjM0LDM4bDgsOEgzNHY4SDY4LjM0bC04LDhMNjYsNjcuNjYsODAuODMsNTIuODNhNCw0LDAsMCwwLDAtNS42NloiPjwvcGF0aD48L2c+PC9zdmc+" />
+                        <span>log out</span>
+                        <img alt="log out" width="32" height="32" src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjMDAwMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGRhdGEtbmFtZT0iTGF5ZXIgMSIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHg9IjBweCIgeT0iMHB4Ij48dGl0bGU+QXJ0Ym9hcmQgODQ8L3RpdGxlPjxnPjxwYXRoIGQ9Ik0yOCw4MkgzOFY3NEgyOGEyLDIsMCwwLDEtMi0yVjI4YTIsMiwwLDAsMSwyLTJIMzhWMThIMjhBMTAsMTAsMCwwLDAsMTgsMjhWNzJBMTAsMTAsMCwwLDAsMjgsODJaIj48L3BhdGg+PHBhdGggZD0iTTY2LDMyLjM0LDYwLjM0LDM4bDgsOEgzNHY4SDY4LjM0bC04LDhMNjYsNjcuNjYsODAuODMsNTIuODNhNCw0LDAsMCwwLDAtNS42NloiPjwvcGF0aD48L2c+PC9zdmc+" />
                     <a>
 
                 </div>

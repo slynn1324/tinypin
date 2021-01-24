@@ -3,7 +3,7 @@ function getOriginalImagePath(pinId){
         return "";
     }
     let paddedId = pinId.toString().padStart(12, '0');
-    let dir = `originals/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
+    let dir = `images/originals/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
     let file = `${dir}/${paddedId}.jpg`;
     return file;
 }
@@ -13,7 +13,7 @@ function getThumbnailImagePath(pinId){
         return "";
     }
     let paddedId = pinId.toString().padStart(12, '0');
-    let dir = `thumbnails/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
+    let dir = `images/thumbnails/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
     let file = `${dir}/${paddedId}.jpg`;
     return file;
 }

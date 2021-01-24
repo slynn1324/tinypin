@@ -12,6 +12,7 @@ const fetch = require('node-fetch');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
 const { send } = require('process');
+const { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } = require('constants');
 
 process.on('SIGINT', () => {
     console.info('ctrl+c detected, exiting tinypin');
@@ -72,6 +73,10 @@ console.log('');
 
 
 const db = betterSqlite3(DB_PATH);
+initDb();
+
+const COOKIE_KEY = Buffer.from(db.prepare("SELECT value FROM properties WHERE key = ?").get('cookieKey').value, 'hex');
+
 // express config
 const app = express();
 app.use(express.static('public'));
@@ -81,77 +86,149 @@ app.use(bodyParser.json());
 app.set('json spaces', 2);
 app.use(cookieParser());
 
+function sendAuthCookie(res, c){
+    res.cookie('s', encryptCookie(c), {maxAge: 315569520000}); // 10 years
+}
 
-app.post("/login", (req, res) => {
+async function deriveKeyFromPassword(salt, pw){
+    return new Promise( (resolve, reject) => {
+        crypto.scrypt(pw, salt, 64, (err, key) => {
+            resolve(key.toString('hex'));
+        });
+    }); 
+}
 
-    let username = req.body.username;
-    let passhash = hashPassword(req.body.password);
-    
-    let result = db.prepare("SELECT * FROM users WHERE username = @username AND passhash = @passhash").get({username: username, passhash: passhash});
+function encryptCookie(obj){
+    let str = JSON.stringify(obj);
+    let iv = crypto.randomBytes(16);
+    let cipher = crypto.createCipheriv('aes256', COOKIE_KEY, iv);
+    let ciphered = cipher.update(str, 'utf8', 'hex');
+    ciphered += cipher.final('hex');
+    return iv.toString('hex') + ':' + ciphered;
+}
 
-    if ( result ){
-        console.log(`login ${username} ok`);
+function decryptCookie(ciphertext){
+    let components = ciphertext.split(':');
+    let iv_from_ciphertext = Buffer.from(components.shift(), 'hex');
+    let decipher = crypto.createDecipheriv('aes256', COOKIE_KEY, iv_from_ciphertext);
+    let deciphered = decipher.update(components.join(':'), 'hex', 'utf8');
+    deciphered += decipher.final('utf8');
+    return JSON.parse(deciphered);
+}
 
-        sendAuthCookie(res,{
+app.use ( async (req, res, next) => {
+
+    // skip auth for pub resources
+    // handle login and register paths
+    if ( req.originalUrl.startsWith("/pub/")){
+        next();
+        return;
+    } if ( req.method == "GET" && req.originalUrl == "/login" ){
+        res.type("html").sendFile(path.resolve('./templates/login.html'));
+        return;
+    } else if ( req.method == "POST" && req.originalUrl == "/login" ){
+        let username = req.body.username;
+        let result = db.prepare("SELECT salt FROM users WHERE username = ?").get(username);
+        if ( !result ){
+            console.log(`login ${username} failed [unknown user]`);
+            res.redirect("/login#nope");
+            return;
+        }
+
+        let key = await deriveKeyFromPassword(result.salt, req.body.password);
+        result = db.prepare("SELECT * FROM users WHERE username = @username AND key = @key").get({username: username, key: key});
+
+        if (!result){
+            console.log(`login ${username} failed [bad password]`);
+            res.redirect("/login#nope");
+            return;
+        }
+
+        sendAuthCookie(res, {
             i: result.id,
-            u: req.body.username,
-            d: new Date().toISOString()
-        });   
-        
+            u: username
+        });
+
+        console.log(`login ${username} ok`);
         res.redirect("./");
+        return;
+    } else if ( req.method == "GET" && req.originalUrl == "/register" ){
+        res.type("html").sendFile(path.resolve('./templates/register.html'));
+        return;
+    } else if ( req.method == "POST" && req.originalUrl == "/register" ){
 
-    } else {
-        console.log(`login ${username} failed`);
-        res.redirect("/login.html#nope");
-    }
+        let username = req.body.username;
+        let salt = crypto.randomBytes(16).toString('hex');
+        let key = await deriveKeyFromPassword(salt, req.body.password);
 
-});
+        let result = db.prepare("INSERT INTO users (username, key, salt, createDate) VALUES (@username, @key, @salt, @createDate)").run({username: username, key: key, salt: salt, createDate: new Date().toISOString()});
 
-// auth -- if the cookie is set exctract the user info, otherwise redirect to /login.html
-app.use( (req, res, next) => {
+        if ( result && result.changes == 1 ){
+            sendAuthCookie(res, {
+                i: result.lastInsertRowid,
+                u: username
+            });
 
-    // todo - allow basic auth for apis?
+            console.log(`created user ${username}`);
+            res.redirect("./");
+        } else {
+            console.log(`error creating account ${name}`);
+            res.redirect("/register#nope");
+        }
+
+        return;
+    } 
+
+    // if we made it this far, we're eady to check for the cookie
     let s = req.cookies.s;
 
     if ( s ){
         try {
-            s = JSON.parse(s);
-
+            s = decryptCookie(s);
             if ( s.i && s.u ){
                 req.user = {
                     id: s.i,
                     name: s.u
                 }
-
-                next();
-            } else {
-                console.log(s);
-                console.error(`invalid cookie`);
-                failAuth(req,res);
             }
-        } catch (err){
+        } catch (err) {
             console.error(`error parsing cookie: `, err);
-            failAuth(req,res);
         }
-    
+    }
+
+    if ( !req.user ){
+        res.redirect("/login");
+    }
+
+    if ( req.method == "GET" && req.originalUrl == "/logout" ){
+        console.log(`logout ${req.user.name}`);
+        res.cookie('s', '', {maxAge:0});
+        res.redirect("/login");
+        return;
+    }
+
+    next();
+
+});
+
+app.use(express.static('static'));
+// app.use(express.static(IMAGE_PATH));
+
+// handle image serving, injecting the user id in the path to segregate users and control cross-user resource access
+app.use( (req, res, next) => {
+
+    if ( req.method == "GET" && req.originalUrl.startsWith("/images/") ){
+
+        let filepath = IMAGE_PATH + '/' + req.user.id + '/' + req.originalUrl;
+        res.setHeader('Cache-control', `private, max-age=2592000000`); // 30 days
+        res.sendFile(filepath); 
+
     } else {
-        // if it's an api or image request, just 401 -- otherwise redirect the browser
-        failAuth(req,res);
+        next();
     }
 
 });
 
-function failAuth(req,res){
-    if ( req.originalUrl.startsWith("/api") || req.originalUrl.startsWith("/thumbnails") || req.originalUrl.startsWith("/originals") ){
-        res.status(401).send();
-    } else {
-        res.redirect("/login.html"); // this means we have issues with a context path, but is needed for image redirects to work
-    }
-}
-
-
-app.use(express.static('static'));
-app.use(express.static(IMAGE_PATH));
 
 //emulate slow down
 if ( SLOW ){
@@ -169,7 +246,6 @@ const ALREADY_EXISTS = {status: "error", error: "already exists"};
 const SERVER_ERROR = {status: "error", error: "server error"};
 
 initDb();
-const passwordSalt = getPasswordSalt();
 
 // list boards
 app.get("/api/boards", async (req, res) => {
@@ -252,8 +328,8 @@ app.delete("/api/boards/:boardId", async (req, res) => {
 
         let pins = db.prepare("SELECT id FROM pins WHERE userId = @userId and boardId = @boardId").all({userId:req.user.id, boardId:req.params.boardId});
         for ( let i = 0; i < pins.length; ++i ){
-            await fs.unlink(getThumbnailImagePath(pins[i].id).file);
-            await fs.unlink(getOriginalImagePath(pins[i].id).file);
+            await fs.unlink(getThumbnailImagePath(req.user.id, pins[i].id).file);
+            await fs.unlink(getOriginalImagePath(req.user.id, pins[i].id).file);
         }
 
         let result = db.prepare("DELETE FROM pins WHERE userId = @userId and boardId = @boardId").run({userId:req.user.id, boardId:req.params.boardId});
@@ -332,8 +408,8 @@ app.post("/api/pins", async (req, res) => {
         let id = result.lastInsertRowid;
 
         // write the images to disk
-        let originalImagePath = getOriginalImagePath(id);
-        let thumbnailImagePath = getThumbnailImagePath(id);
+        let originalImagePath = getOriginalImagePath(req.user.id, id);
+        let thumbnailImagePath = getThumbnailImagePath(req.user.id, id);
         await fs.mkdir(originalImagePath.dir, {recursive: true});
         await fs.mkdir(thumbnailImagePath.dir, {recursive: true});
         await fs.writeFile(originalImagePath.file, image.original.buffer);
@@ -388,8 +464,8 @@ app.delete("/api/pins/:pinId", async (req, res) => {
         let result = db.prepare('DELETE FROM pins WHERE userId = @userId and id = @pinId').run({userId: req.user.id, pinId:req.params.pinId});
 
         if ( result.changes == 1 ){
-            await fs.unlink(getThumbnailImagePath(req.params.pinId).file);
-            await fs.unlink(getOriginalImagePath(req.params.pinId).file);
+            await fs.unlink(getThumbnailImagePath(req.user.id, req.params.pinId).file);
+            await fs.unlink(getOriginalImagePath(req.user.id, req.params.pinId).file);
 
             console.log(`deleted pin#${req.params.pinId}`);
             res.send(OK);
@@ -402,44 +478,6 @@ app.delete("/api/pins/:pinId", async (req, res) => {
     }
 });
 
-
-
-app.post("/create-account", (req, res) => {
-    
-    console.log(`creating user '${req.body.username}'`);
-
-    let passhash = hashPassword(req.body.password);
-    
-    let result = db.prepare('INSERT INTO users (username, passhash) VALUES (@username, @passhash)').run({username: req.body.username, passhash: passhash});
-
-    console.log(`  user pk = ${result.lastInsertRowid}`);
-
-    sendAuthCookie(res, {
-        i: result.lastInsertRowid,
-        u: req.body.username,
-        d: new Date().toISOString()
-    });
-
-    res.redirect("create-account.html");
-});
-
-app.get("/logout", (req, res) => {
-    console.log(`logout user ${req.user.name}`);
-    res.cookie('s', '', {maxAge:0});
-    res.redirect("/login.html");
-});
-
-app.get("/whoami", (req, res) => {
-    res.send(req.user);
-});
-
-function sendAuthCookie(res, c){
-    res.cookie('s', JSON.stringify(c), {maxAge: 315569520000}); // 10 years
-}
-
-function hashPassword(pw){
-    return crypto.createHash('sha256', passwordSalt).update(pw).digest('hex');
-}
 
 
 // start listening
@@ -467,23 +505,24 @@ function initDb(){
 
         db.prepare(`
             CREATE TABLE users (
-                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                id INTEGER NOT NULL PRIMARY KEY,
                 username TEXT NOT NULL UNIQUE,
-                passhash TEXT NOT NULL,
+                key TEXT NOT NULL,
+                salt TEXT NOT NULL,
                 createDate TEXT
             )
         `).run();
 
         db.prepare(`
-            CREATE TABLE properties (
-                key TEXT NOT NULL PRIMARY KEY,
-                value TEXT NOT NULL
-            )
+                CREATE TABLE properties (
+                    key TEXT NOT NULL UNIQUE PRIMARY KEY,
+                    value TEXT NOT NULL
+                )
         `).run();
 
         db.prepare(`
         CREATE TABLE boards (
-            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+            id INTEGER NOT NULL PRIMARY KEY, 
             name TEXT NOT NULL UNIQUE, 
             userId INTEGER NOT NULL,
             createDate TEXT,
@@ -492,6 +531,8 @@ function initDb(){
             )
         `).run();
 
+        // autoincrement on pins so that pin ids are stable and are not reused.
+        // this allows for better caching of images
         db.prepare(`
         CREATE TABLE pins (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -512,7 +553,7 @@ function initDb(){
         )
         `).run();
 
-        db.prepare("INSERT INTO properties (key, value) VALUES (@key, @value)").run({key: 'pwsalt', value: crypto.randomBytes(32).toString('hex')});
+        db.prepare("INSERT INTO properties (key, value) VALUES (@key, @value)").run({key: "cookieKey", value: crypto.randomBytes(32).toString('hex')});
         db.prepare("INSERT INTO migrations (id, createDate) VALUES ( @id, @createDate )").run({id:1, createDate: new Date().toISOString()});
 
         schemaVersion = 1;
@@ -520,10 +561,6 @@ function initDb(){
 
     console.log(`database ready - schema version v${schemaVersion}`);
     console.log('');
-}
-
-function getPasswordSalt(){
-    return db.prepare('SELECT value FROM properties WHERE key = ?').get('pwsalt').value;
 }
 
 async function downloadImage(imageUrl){
@@ -559,17 +596,16 @@ async function downloadImage(imageUrl){
 }
 
 
-
-function getOriginalImagePath(pinId){
+function getOriginalImagePath(userId, pinId){
     let paddedId = pinId.toString().padStart(12, '0');
-    let dir = `${IMAGE_PATH}/originals/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
+    let dir = `${IMAGE_PATH}/${userId}/images/originals/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
     let file = `${dir}/${paddedId}.jpg`;
     return {dir: dir, file: file};
 }
 
-function getThumbnailImagePath(pinId){
+function getThumbnailImagePath(userId, pinId){
     let paddedId = pinId.toString().padStart(12, '0');
-    let dir = `${IMAGE_PATH}/thumbnails/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
+    let dir = `${IMAGE_PATH}/${userId}/images/thumbnails/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
     let file = `${dir}/${paddedId}.jpg`;
     return {dir: dir, file: file};
 }
