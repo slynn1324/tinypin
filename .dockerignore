@@ -4,3 +4,5 @@
 *.pem
 .gitignore
 .git
+docker-run.sh
+docker-build.sh
