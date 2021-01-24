@@ -5,4 +5,5 @@
 - add hidden flag to boards / control
 - add change password function
 - add logged in user name to menu
+- addpin.html remember last board
 
