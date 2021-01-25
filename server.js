@@ -2,7 +2,6 @@ const yargs = require('yargs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const betterSqlite3 = require('better-sqlite3');
-// const db = require('better-sqlite3') //, {verbose:console.log});
 const http = require('http');
 const https = require('https');
 const sharp = require('sharp');
@@ -11,8 +10,6 @@ const path = require('path');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
-const { send } = require('process');
-const { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } = require('constants');
 
 process.on('SIGINT', () => {
     console.info('ctrl+c detected, exiting tinypin');
@@ -25,6 +22,8 @@ process.on('SIGTERM', () => {
     console.info('goodbye.');
     process.exit(0);
 });
+
+let VERSION = require('fs').readFileSync('version.txt', 'utf8');
 
 const argv = yargs
     .option('slow', {
@@ -59,6 +58,8 @@ const IMAGE_PATH = path.resolve(argv['image-path']);
 const PORT = argv.port;
 
 console.log('tinypin starting...');
+console.log('');
+console.log(`version: ${VERSION}`);
 console.log('');
 console.log('configuration:');
 console.log(`  port: ${PORT}`);
@@ -217,7 +218,6 @@ app.use ( async (req, res, next) => {
 
 // handle image serving, injecting the user id in the path to segregate users and control cross-user resource access
 app.use( (req, res, next) => {
-
     if ( req.method == "GET" && req.originalUrl.startsWith("/images/") ){
 
         let filepath = IMAGE_PATH + '/' + req.user.id + '/' + req.originalUrl;
@@ -227,7 +227,6 @@ app.use( (req, res, next) => {
     } else {
         next();
     }
-
 });
 
 app.use(express.static('static'));
@@ -249,7 +248,7 @@ const SERVER_ERROR = {status: "error", error: "server error"};
 
 
 app.get("/api/whoami", (req, res) => {
-    res.send({name: req.user.name});
+    res.send({name: req.user.name, version: VERSION});
 });
 
 // list boards
