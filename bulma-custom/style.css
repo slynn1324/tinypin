@@ -1,6 +1,5 @@
 /*! bulma.io v0.9.1 | MIT License | github.com/jgthms/bulma */
 /* Bulma Utilities */
-/* customized to set $navbar-breakpoint: 99999; so that the menu always works like mobile */
 @keyframes spinAround {
   from {
     transform: rotate(0deg); }

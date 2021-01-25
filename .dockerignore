@@ -13,3 +13,4 @@ docker-build.sh
 /chrome-extension
 /node-modules
 data
+/bulma-custom
