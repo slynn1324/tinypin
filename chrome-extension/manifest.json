@@ -1,6 +1,6 @@
 {
     "name": "add to tinypin",
-    "version": "1.0",
+    "version": "1.0.0",
     "description": "add to tinypin context menu plugin",
     "manifest_version": 2,
     "background" : { "scripts": ["background.js"] },

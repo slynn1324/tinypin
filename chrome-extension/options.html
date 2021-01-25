@@ -2,18 +2,28 @@
 <html>
     <head>
         <title>tinypin options</title>
+        <link rel="stylesheet" href="./bulma-custom.css" />
     </head>
-    <body style="font-size: 1em;">
+    <body>
 
-        <label for="server">server url</label>
-        <div>
-            <input type="text" id="server" style="width: 95%; font-size: 1em;"/>
-        </div>
+        <div class="secton">
 
-        <div style="margin-top: 20px;">
+            <div class="content" style="margin: 10px;">
+
+                
+                <div class="field">
+                    <label class="label">tinypin server url</label>
+                    <div class="control">
+                        <input class="input" id="server" type="text">
+                    </div>
+                </div>
+
+                <button class="button is-success" id="save">Save</button>
+                <span id="status" style="line-height: 2.5em; color: #3273dc;"></span>
+
             
-            <button id="save">Save</button>
-            <span id="status" style="color: green;"></span>
+
+            </div>
 
         </div>
 
