@@ -44,6 +44,8 @@ app.addComponent('aboutModal', (store) => { return new Reef("#aboutModal", {
                         <br />
                         &nbsp;hidden icon &raquo; <a href="https://thenounproject.com/term/hidden/3543981/">hidden by vittorio longo from the Noun Project</a>
                         <br />
+                        &nbsp;about icon &raquo; <a href="https://thenounproject.com/term/info/3495259/">Info by Sriti Chamola from the Noun Project</a>
+                        <br />
                         <br />
                         server
                         <br />
@@ -57,9 +59,13 @@ app.addComponent('aboutModal', (store) => { return new Reef("#aboutModal", {
                         <br />
                         &nbsp;library &raquo; <a href="https://www.npmjs.com/package/body-parser">body-parser</a>
                         <br />
+                        &nbsp;library &raquo; <a href="https://www.npmjs.com/package/cookie-parser">cookie-parser</a>
+                        <br />
                         &nbsp;library &raquo; <a href="https://www.npmjs.com/package/node-fetch">node-fetch</a>
                         <br />
                         &nbsp;library &raquo; <a href="https://www.npmjs.com/package/sharp">sharp</a>
+                        <br />
+                        &nbsp;library &raquo; <a href="https://www.npmjs.com/package/yargs">yargs</a>
                     </div>
                 </div>
             </div>
