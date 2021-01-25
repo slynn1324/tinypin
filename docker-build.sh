@@ -1,2 +1,2 @@
 #!/bin/sh
-docker build -t tinypin .
+docker build -t slynn1324/tinypin .

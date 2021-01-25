@@ -3,9 +3,13 @@
 *.crx
 *.pem
 .gitignore
-.git
+/.git
 docker-run.sh
 docker-build.sh
-images
-images*
+/images
+/images*
 *.db*
+*.md
+/chrome-extension
+/node-modules
+data
