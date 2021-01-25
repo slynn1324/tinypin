@@ -1,5 +1,13 @@
 FROM node:alpine3.12
 
+LABEL maintainer="slynn1324@gmail.com"
+
+ARG VERSION
+
+LABEL tinypin-version=$VERSION
+
+ENV TINYPIN_VERSION=$VERSION
+
 COPY . /tinypin
 
 WORKDIR /tinypin
