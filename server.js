@@ -23,7 +23,7 @@ process.on('SIGTERM', () => {
     process.exit(0);
 });
 
-let VERSION = require('fs').readFileSync('version.txt', 'utf8').trim();
+const VERSION = require("fs").existsSync("version.txt") ? require("fs").readFileSync("version.txt", "utf8").trim() : "none";
 
 const argv = yargs
     .option('slow', {
