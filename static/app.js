@@ -60,6 +60,20 @@ app.addSetter("hash.update", (data) => {
     }
 });
 
+app.addSetter("photoswipe.close", (data) => {
+    closePhotoSwipe();
+});
+
+app.addSetter("photoswipe.openLink", (data) => {
+    let siteUrl = photoSwipeGallery.currItem.siteUrl;
+    console.log("siteUrl=", siteUrl);
+
+    if ( siteUrl ){
+        window.open(siteUrl);
+    }
+});
+
+
 let store = new Reef.Store({
     data: {
         hash: {
@@ -145,11 +159,16 @@ for (const [name, f] of Object.entries(app.getComponents())) {
 
 document.addEventListener('click', (el) => {
 
+    let ps = el.target.closest('[data-photoswipe');
+    if ( ps ){
+        openPhotoSwipe(ps);
+        return;
+    }
+
     // we always want to close the menu on click.  if we clicked an item,
     // that will still trigger below
     let burger = el.target.closest('.navbar-burger');
-    console.log("the burger is: ", burger);
-    if ( !burger ){
+    if ( !burger && store.data.menuOpen && !isPhotoSwipeOpen ){
         store.do('navbar.closeMenu');
     }
     
@@ -211,6 +230,10 @@ window.addEventListener("hashchange", () => {
 
 window.addEventListener('resize', (evt) => {
     store.do("render");
+});
+
+document.addEventListener('render', () => {
+    console.log("render");
 });
 
 Reef.databind(appComponent);

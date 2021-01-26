@@ -1,13 +1,20 @@
 app.addSetter('editPinModal.open', (data) => {
+    let pinId = photoSwipeGallery.currItem.pinId;
+    closePhotoSwipe();
+    data.editPinModal.pin = getPinById(pinId);
     data.editPinModal.active = true;
 });
 
 app.addSetter('editPinModal.close', (data) => {
     data.editPinModal.active = false;
 
+    let pinId = data.editPinModal.pin.id;
+
     data.editPinModal.pin = null;
     data.editPinModal.newBoardName = null;
     data.editPinModal.saveInProgress = false;
+
+    openPhotoSwipe(pinId);
 });
 
 app.addGetter('editPinModal.isValid', (data) => {
@@ -111,9 +118,6 @@ app.addComponent('editPinModal', (store) => { return new Reef("#editPinModal", {
             options += `<option value="${data.boards[i].id}">${data.boards[i].name}</option>`;
         }
 
-        console.log("render", data);
-
-        console.log("set new board field");
         let newBoardField = '';
         if ( data.editPinModal.pin && data.editPinModal.pin.boardId == "new" ){
         // if ( true ) {

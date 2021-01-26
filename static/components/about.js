@@ -28,6 +28,8 @@ app.addComponent('aboutModal', (store) => { return new Reef("#aboutModal", {
                         <br />
                         &nbsp;ui framework &raquo; <a href="https://reefjs.com">reef</a>
                         <br />
+                        &nbsp;zoom viewer &raquo; <a href="https://photoswipe.com/">photoswipe</a>
+                        <br />
                         &nbsp;boards icon &raquo; <a href="https://thenounproject.com/term/squares/1160031/">squares by Andrejs Kirma from the Noun Project</a>
                         <br />
                         &nbsp;pin icon &raquo; <a href="https://thenounproject.com/term/pinned/1560993/">pinned by Gregor Cresnar from the Noun Project</a>

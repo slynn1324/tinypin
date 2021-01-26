@@ -3,6 +3,14 @@ app.addSetter('brickwall.toggleHiddenBoards', (data) => {
     window.localStorage.showHiddenBoards = data.showHiddenBoards;
 });
 
+app.addSetter('brickwall.zoom', (data, el) => {
+    let pinId = el.getAttribute('data-pinid');
+    openPhotoSwipe({
+        pinId: pinId,
+        element: el
+    });
+});
+
 app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
 
     store: store,
@@ -82,7 +90,7 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
         function createBrickForPin(board, pin){
             return  { height: pin.thumbnailHeight, template: /*html*/`
             <div class="brick" >
-                <a data-pinid="${pin.id}" data-onclick="pinZoomModal.open">
+                <a data-pinid="${pin.id}" data-onclick="brickwall.zoom">
                     <img class="thumb" src="${getThumbnailImagePath(pin.id)}" width="${pin.thumbnailWidth}" height="${pin.thumbnailHeight}" />
                 </a>
             </div>

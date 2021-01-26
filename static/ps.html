@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="photoswipe/photoswipe-4.1.3.css">
+        <link rel="stylesheet" href="photoswipe/default-skin/default-skin.css">
+        <style>
+.pswp__img--placeholder--blank{
+    display: none;
+}
+
+        </style>
+    </head>
+    <body>
+        <div id="images">
+            <img src="images/thumbnails/1/0/0/0/000000000001.jpg" />
+            <img src="images/thumbnails/2/0/0/0/000000000002.jpg" />
+            <img src="images/thumbnails/3/0/0/0/000000000003.jpg" />
+        </div>
+
+        <div class="pswp" id="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+            <!-- Background of PhotoSwipe. 
+                 It's a separate element as animating opacity is faster than rgba(). -->
+            <div class="pswp__bg"></div>
+        
+            <!-- Slides wrapper with overflow:hidden. -->
+            <div class="pswp__scroll-wrap">
+        
+                <!-- Container that holds slides. 
+                    PhotoSwipe keeps only 3 of them in the DOM to save memory.
+                    Don't modify these 3 pswp__item elements, data is added later on. -->
+                <div class="pswp__container">
+                    <div class="pswp__item"></div>
+                    <div class="pswp__item"></div>
+                    <div class="pswp__item"></div>
+                </div>
+        
+                <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+                <div class="pswp__ui pswp__ui--hidden">
+        
+                    <div class="pswp__top-bar">
+        
+                        <!--  Controls are self-explanatory. Order can be changed. -->
+        
+                        <div class="pswp__counter"></div>
+        
+                        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        
+                        <!--<button class="pswp__button pswp__button--share" title="Share"></button>-->
+        
+        
+                        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        
+                        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        
+                        <!-- Preloader demo https://codepen.io/dimsemenov/pen/yyBWoR -->
+                        <!-- element will get class pswp__preloader--active when preloader is running -->
+                        <div class="pswp__preloader">
+                            <div class="pswp__preloader__icn">
+                              <div class="pswp__preloader__cut">
+                                <div class="pswp__preloader__donut"></div>
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+                    </button>
+        
+                    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+                    </button>
+        
+                    <div class="pswp__caption">
+                        <div class="pswp__caption__center"></div>
+                    </div>
+        
+                </div>
+        
+            </div>
+        
+        </div>
+
+        <script src="photoswipe/photoswipe-4.1.3.min.js"></script>
+        <script src="photoswipe/photoswipe-ui-default-4.1.3.min.js"></script>
+
+        <script>
+
+function openPhotoSwipe(el){
+    
+    // let data = store.data;
+
+    let pinId = el.getAttribute("data-pinid");
+
+    let pswpElement = document.getElementById("pswp");
+
+    let selectedIndex = 0;
+
+    var items = [];
+    let images = document.getElementById("images").querySelectorAll("img");
+    for ( let i = 0; i < images.length; ++i ){
+        if ( el.src == images[i].src ){
+            selectedIndex = i;
+        }
+        items.push({
+            msrc: images[i].getAttribute('src'),
+            originalImage: {
+                src: images[i].getAttribute('src'),
+                w: images[i].offsetWidth,
+                h: images[i].offsetHeight
+            },
+            mediumImage: {
+                src: images[i].getAttribute('src'),
+                w: images[i].offsetWidth,
+                h: images[i].offsetHeight
+            }
+            
+        });
+    }
+
+    console.log(selectedIndex);
+    console.log(items);
+    // for ( let i = 0; i < data.board.pins.length; ++i ){
+    //     items.push({
+    //         originalImage: {
+    //             src: getOriginalImagePath(data.board.pins[i].id),
+    //             w: data.board.pins[i].originalWidth,
+    //             h: data.board.pins[i].originalHeight
+    //         },
+    //         mediumImage: {
+    //             src: getThumbnailImagePath(data.board.pins[i].id),
+    //             w: data.board.pins[i].thumbnailWidth,
+    //             h: data.board.pins[i].thumbnailHeight
+    //         }
+    //     });
+    // }
+
+    let options = {
+        index: selectedIndex,
+        loop: false,
+        bgOpacity: 0.85,
+        getThumbBoundsFn: function(index) {
+            // See Options->getThumbBoundsFn section of docs for more info
+            var thumbnail = el,
+                pageYScroll = window.pageYOffset || document.documentElement.scrollTop,
+                rect = thumbnail.getBoundingClientRect(); 
+
+            return {x:rect.left, y:rect.top + pageYScroll, w:rect.width};
+        },
+        history: false
+    };
+
+    let gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, options);
+
+    let realViewportWidth,
+        useLargeImages = false,
+        firstResize = true,
+        imageSrcWillChange;
+
+    gallery.listen('beforeResize', function() {
+
+        var dpiRatio = window.devicePixelRatio ? window.devicePixelRatio : 1;
+        dpiRatio = Math.min(dpiRatio, 2.5);
+        realViewportWidth = gallery.viewportSize.x * dpiRatio;
+
+
+        // if(realViewportWidth >= 1200 || (!gallery.likelyTouchDevice && realViewportWidth > 800) || screen.width > 1200 ) {
+        //     if(!useLargeImages) {
+        //         useLargeImages = true;
+        //         imageSrcWillChange = true;
+        //     }
+            
+        // } else {
+        //     if(useLargeImages) {
+        //         useLargeImages = false;
+        //         imageSrcWillChange = true;
+        //     }
+        // }
+
+        if(imageSrcWillChange && !firstResize) {
+            gallery.invalidateCurrItems();
+        }
+
+        if(firstResize) {
+            firstResize = false;
+        }
+
+        imageSrcWillChange = false;
+
+    });
+
+    gallery.listen('gettingData', function(index, item) {
+        if( useLargeImages ) {
+            item.src = item.originalImage.src;
+            item.w = item.originalImage.w;
+            item.h = item.originalImage.h;
+        } else {
+            item.src = item.mediumImage.src;
+            item.w = item.mediumImage.w;
+            item.h = item.mediumImage.h;
+        }
+    });
+
+
+    gallery.init();
+}
+
+
+document.addEventListener('click', (evt) => {
+    console.log(evt);
+    if ( evt.target.tagName == "IMG" ){
+        openPhotoSwipe(evt.target);
+    }
+});
+
+        </script>
+
+    </body>
+</html>

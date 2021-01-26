@@ -31,12 +31,93 @@ app.addSetter('pinZoomModal.open', (data, el) => {
         
     let pinId = el.getAttribute("data-pinid");
 
-    if( pinId ){
-        let idx = getPinIndexById(pinId);
+    // if( pinId ){
+    //     let idx = getPinIndexById(pinId);
 
-        data.pinZoomModal.pin = data.board.pins[idx];
-        data.pinZoomModal.active = true;
+    //     data.pinZoomModal.pin = data.board.pins[idx];
+    //     data.pinZoomModal.active = true;
+    // }
+
+
+    let pswpElement = document.getElementById("pswp");
+
+    var items = [];
+    for ( let i = 0; i < data.board.pins.length; ++i ){
+        items.push({
+            src: getThumbnailImagePath(data.board.pins[i].id),
+            w: data.board.pins[i].originalWidth,
+            h: data.board.pins[i].originalHeight
+        });
     }
+
+    let options = {
+        index: getPinIndexById(pinId),
+        loop: false,
+        bgOpacity: 0.85,
+        getThumbBoundsFn: function(index) {
+            // See Options->getThumbBoundsFn section of docs for more info
+            var thumbnail = el,
+                pageYScroll = window.pageYOffset || document.documentElement.scrollTop,
+                rect = thumbnail.getBoundingClientRect(); 
+
+            return {x:rect.left, y:rect.top + pageYScroll, w:rect.width};
+        },
+    };
+
+    let gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, options);
+
+    // var realViewportWidth,
+    //     useLargeImages = false,
+    //     firstResize = true,
+    //     imageSrcWillChange;
+
+    // gallery.listen('beforeResize', function() {
+
+    //     var dpiRatio = window.devicePixelRatio ? window.devicePixelRatio : 1;
+    //     dpiRatio = Math.min(dpiRatio, 2.5);
+    //     realViewportWidth = gallery.viewportSize.x * dpiRatio;
+
+
+    //     if(realViewportWidth >= 1200 || (!gallery.likelyTouchDevice && realViewportWidth > 800) || screen.width > 1200 ) {
+    //         if(!useLargeImages) {
+    //             useLargeImages = true;
+    //             imageSrcWillChange = true;
+    //         }
+            
+    //     } else {
+    //         if(useLargeImages) {
+    //             useLargeImages = false;
+    //             imageSrcWillChange = true;
+    //         }
+    //     }
+
+    //     if(imageSrcWillChange && !firstResize) {
+    //         gallery.invalidateCurrItems();
+    //     }
+
+    //     if(firstResize) {
+    //         firstResize = false;
+    //     }
+
+    //     imageSrcWillChange = false;
+
+    // });
+
+    // gallery.listen('gettingData', function(index, item) {
+    //     // if( useLargeImages ) {
+    //     //     item.src = item.o.src;
+    //     //     item.w = item.o.w;
+    //     //     item.h = item.o.h;
+    //     // } else {
+    //     //     item.src = item.m.src;
+    //     //     item.w = item.m.w;
+    //     //     item.h = item.m.h;
+    //     // }
+    // });
+
+    
+    gallery.init();
+
     
 });
 
