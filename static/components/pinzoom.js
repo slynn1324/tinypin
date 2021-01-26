@@ -141,7 +141,7 @@ app.addComponent('pinZoomModal', (store) => { return new Reef("#pinZoomModal", {
         let isFirst = true;
         let isLast = true;
 
-        if ( data.pinZoomModal.pin ){
+        if ( data.pinZoomModal.pin && data.board ){
             let idx = getPinIndexById(data.pinZoomModal.pin.id);
             isFirst = idx == 0;
             isLast = idx == (data.board.pins.length - 1);
