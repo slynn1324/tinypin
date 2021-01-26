@@ -9,4 +9,7 @@
 - add multi-arch support to docker builds
     - node sharp install issues : arm linux musl (alpine) is not currently supported, building from source has seemed complicated...
     - sqlite3 may need to be compiled, but seems to happen automatically (albeit slow)
+- support receiving data urls
+- support uploading images
+- left/right arrow links on pinzoom
 

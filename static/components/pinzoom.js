@@ -138,6 +138,15 @@ app.addComponent('pinZoomModal', (store) => { return new Reef("#pinZoomModal", {
             `;
         }
 
+        let isFirst = true;
+        let isLast = true;
+
+        if ( data.pinZoomModal.pin ){
+            let idx = getPinIndexById(data.pinZoomModal.pin.id);
+            isFirst = idx == 0;
+            isLast = idx == (data.board.pins.length - 1);
+        }
+
 
         return /*html*/`
             <div class="modal ${data.pinZoomModal.active ? 'is-active' : ''}">
@@ -154,6 +163,12 @@ app.addComponent('pinZoomModal', (store) => { return new Reef("#pinZoomModal", {
                 
                 ${pinZoomDescription}
                 
+                <div data-onclick="pinZoomModal.moveLeft" id="pinZoomModal-moveLeft" style="${isFirst ? 'display: none;' : '' }">
+                    <div style=""></div>
+                </div>
+                <div data-onclick="pinZoomModal.moveRight" id="pinZoomModal-moveRight" style="${isLast ? 'display: none;' : '' }">
+                    <div style=""></div>
+                </div>
             </div>
         `;
     }
