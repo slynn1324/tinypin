@@ -62,7 +62,6 @@ app.addSetter('editBoardModal.delete', async (data) => {
 
 
     let idx = getBoardIndexById(boardId);
-    console.log(idx);
     if ( idx >= 0 ){
         data.boards.splice(idx, 1);
     }

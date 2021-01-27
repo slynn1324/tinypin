@@ -3,6 +3,119 @@ app.addSetter('brickwall.toggleHiddenBoards', (data) => {
     window.localStorage.showHiddenBoards = data.showHiddenBoards;
 });
 
+app.addSetter("brickwall.editPin", (data) => {
+
+    let index = getLightGalleryIndex();
+    
+
+    data.editPinModal.pin = store.data.board.pins[index];
+    
+    store.do('editPinModal.open');
+
+    closeLightGallery();
+});
+
+app.addSetter("brickwall.deletePin", async (data) => {
+    if ( !confirm("Are you sure you want to delete this pin?" ) ){
+        return;
+    }
+
+    store.do('loader.show');
+
+    let index = getLightGalleryIndex();
+
+    let pinId = data.board.pins[index].id;
+
+    data.board.pins.splice(index,1);
+
+    // store.do("pinZoomModal.close");
+    closeLightGallery();
+
+    let res = await fetch(`api/pins/${pinId}`, {
+        method: 'DELETE'
+    });
+
+    if ( res.status == 200 ){
+        console.log(`deleted pin#${pinId}`);
+    } else {
+        console.error(`error deleting pin#${pinId}`);
+    }
+
+    store.do('loader.hide');
+});
+
+var supportsTouch = 'ontouchstart' in window;
+if ( supportsTouch ){
+    document.body.classList.add("supports-touch");
+}
+let lightgalleryElement = document.getElementById("lightgallery");
+let lightgalleryOpen = false;
+
+function openLightGallery(pinId){
+
+    let data = store.data;
+
+    let elements = [];
+    let index = 0;
+    
+    for ( let i = 0; i < data.board.pins.length; ++i ){
+        elements.push({
+            src: getOriginalImagePath(data.board.pins[i].id),
+            subHtml: data.board.pins[i].description,
+            siteUrl: data.board.pins[i].siteUrl
+        });
+        if ( data.board.pins[i].id == pinId ){
+            index = i;
+        }
+    }
+
+    let options = {
+        speed: 333,
+        loop: false,
+        hideControlOnEnd: true,
+        preload: 3,
+        slideEndAnimatoin: false,
+        dynamic: true,
+        dynamicEl: elements,
+        index: index,
+        download: false,
+        startClass: '', // disable zoom
+        backdropDuration: 0 // disable animate in
+    };
+
+    lightGallery(lightgalleryElement, options );    
+    lightgalleryOpen = true;
+}
+
+function closeLightGallery(){
+    lightgalleryOpen = false;
+    let uid = lightgalleryElement.getAttribute("lg-uid");
+    window.lgData[uid].destroy();
+}
+
+function getLightGalleryIndex(){
+    let uid = lightgalleryElement.getAttribute("lg-uid");
+    return window.lgData[uid].index;
+}
+
+document.getElementById("lightgallery").addEventListener("onCloseAfter", () => {
+
+    let uid = lightgalleryElement.getAttribute("lg-uid");
+    if ( uid ){
+        window.lgData[uid].destroy(true);
+    }
+
+});
+
+document.getElementById("lightgallery").addEventListener("onSlideClick", () => {
+    let lgOuter = document.querySelector(".lg-outer");
+    if ( lgOuter.classList.contains("lg-touch-hide-items") ){
+        lgOuter.classList.remove("lg-touch-hide-items");
+    } else {
+        lgOuter.classList.add("lg-touch-hide-items");
+    }
+});
+
 app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
 
     store: store,
@@ -82,8 +195,8 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
         function createBrickForPin(board, pin){
             return  { height: pin.thumbnailHeight, template: /*html*/`
             <div class="brick" >
-                <a data-pinid="${pin.id}" data-onclick="pinZoomModal.open">
-                    <img class="thumb" src="${getThumbnailImagePath(pin.id)}" width="${pin.thumbnailWidth}" height="${pin.thumbnailHeight}" />
+                <a data-pinid="${pin.id}" onclick="openLightGallery(${pin.id})" >
+                    <img class="thumb" src="${getThumbnailImagePath(pin.id)}" width="${pin.thumbnailWidth}" height="${pin.thumbnailHeight}"/>
                 </a>
             </div>
             `};

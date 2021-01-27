@@ -51,6 +51,7 @@ There is trivial security on the web pages to allow for multiple user support.  
 
 - css framework > [bulma.io](https://www.bulma.io)
 - js framework > [reef](https://reefjs.com)
+- pin zoom > [lightgallery.js](https://sachinchoolur.github.io/lightgallery.js/)
 - boards icon > [squares by Andrejs Kirma from the Noun Project](https://thenounproject.com/term/squares/1160031/)
 - pin icon > [pinned by Gregor Cresnar from the Noun Project](https://thenounproject.com/term/pinned/1560993/)
 - web icon > [website by Supriadi Sihotang from the Noun Project](https://thenounproject.com/term/website/2868662/)

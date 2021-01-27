@@ -24,7 +24,6 @@ app.addSetter('addPinModal.close', (data) => {
 });
 
 app.addSetter('addPinModal.updatePreview', (data) => {
-    console.log("update preview");
     if ( data.addPinModal.imageUrl.startsWith("http") ){
         ( async() => {
             let res = await fetch(data.addPinModal.imageUrl, {

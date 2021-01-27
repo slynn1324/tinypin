@@ -5,9 +5,13 @@ app.addSetter('editPinModal.open', (data) => {
 app.addSetter('editPinModal.close', (data) => {
     data.editPinModal.active = false;
 
+    let pinId = data.editPinModal.pin.id;
+
     data.editPinModal.pin = null;
     data.editPinModal.newBoardName = null;
     data.editPinModal.saveInProgress = false;
+
+    openLightGallery(pinId);
 });
 
 app.addGetter('editPinModal.isValid', (data) => {
@@ -88,8 +92,6 @@ app.addSetter("editPinModal.save", async (data) => {
         data.board.pins[idx].boardId = boardId;
         data.board.pins[idx].siteUrl = pin.siteUrl;
         data.board.pins[idx].description = pin.description;
-        
-        console.log(data.board.pins[idx]);
 
         store.do("editPinModal.close");
     } else {
@@ -111,13 +113,8 @@ app.addComponent('editPinModal', (store) => { return new Reef("#editPinModal", {
             options += `<option value="${data.boards[i].id}">${data.boards[i].name}</option>`;
         }
 
-        console.log("render", data);
-
-        console.log("set new board field");
         let newBoardField = '';
         if ( data.editPinModal.pin && data.editPinModal.pin.boardId == "new" ){
-        // if ( true ) {
-            console.log("is new");
             newBoardField = /*html*/`
             <div class="field">
                 <label class="label">Board Name</label>
@@ -126,13 +123,7 @@ app.addComponent('editPinModal', (store) => { return new Reef("#editPinModal", {
                 </div>
             </div>
             `;
-        }
-
-        if ( data.editPinModal.pin ){
-        console.log(getThumbnailImagePath(data.editPinModal.pin.id));
-        }
-
-        
+        }        
 
         return /*html*/`
         <div class="modal ${data.editPinModal.active ? 'is-active' : ''}">

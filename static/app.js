@@ -46,7 +46,6 @@ app.addSetter('load.user', async (data) => {
 });
 
 app.addSetter("hash.update", (data) => {
-    console.log("hash update");
     data.hash = parseQueryString(window.location.hash.substr(1));
     
     if ( data.hash.board ){
@@ -148,8 +147,7 @@ document.addEventListener('click', (el) => {
     // we always want to close the menu on click.  if we clicked an item,
     // that will still trigger below
     let burger = el.target.closest('.navbar-burger');
-    console.log("the burger is: ", burger);
-    if ( !burger ){
+    if ( !burger && store.data.menuOpen ){
         store.do('navbar.closeMenu');
     }
     
@@ -161,6 +159,14 @@ document.addEventListener('click', (el) => {
                 store.do(action, target);
             } catch (err){
                 console.error(`Error invoking ${action}:`, err);
+            }
+        } 
+    } else {
+        let targetx = el.target.closest('[data-onclick-x]'); // onclick-x attempts to invoke a function on window instead of a setter.  this is useful to bypass re-rendering
+        if ( targetx ){
+            let actionx = targetx.getAttribute('data-onclick-x');
+            if ( actionx ){
+                window[actionx](targetx);
             }
         }
     }

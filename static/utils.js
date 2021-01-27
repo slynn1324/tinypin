@@ -31,3 +31,31 @@ function parseQueryString(qs){
     }
     return obj;
 }
+
+function getBoardIndexById(id){
+    let idx = -1;
+    for ( let i = 0; i < store.data.boards.length; ++i ){
+        if ( store.data.boards[i].id == id ){
+            idx = i;
+        }
+    }
+    return idx;
+}
+
+function getBoardById(id){
+    return store.data.boards[getBoardIndexById(id)];
+}
+
+function getPinIndexById(id){
+    let idx = -1;
+    for ( let i = 0; i < store.data.board.pins.length; ++i ){
+        if ( store.data.board.pins[i].id == id ){
+            idx = i;
+        }
+    }
+    return idx;
+}
+
+function getPinById(id){
+    return store.data.board.pins[getPinIndexById(id)];
+}

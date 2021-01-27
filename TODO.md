@@ -11,5 +11,5 @@
     - sqlite3 may need to be compiled, but seems to happen automatically (albeit slow)
 - support receiving data urls
 - support uploading images
-- left/right arrow links on pinzoom
-
+- ~~left/right arrow links on pinzoom~~ (replaced with lightgallery)
+- enable drag up/down to close lightgallery

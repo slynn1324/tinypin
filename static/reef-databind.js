@@ -2,7 +2,7 @@
 // to the 'store'. 
 
 app.addSetter('databind.onInput', (data, bindPath, value) => {
-    console.log(`binding ${bindPath} to ${value}`);
+    // console.log(`binding ${bindPath} to ${value}`);
     put(data, bindPath, value);
 
     /*!
@@ -175,7 +175,6 @@ Reef.databind = function(reef){
                 let options = target.querySelectorAll("option");
                 for ( let i = 0; i < options.length; ++i ){
                     if ( options[i].selected ){
-                        console.log(options[i].value);
                         val.push(parseString(options[i].value));
                     }
                 }
