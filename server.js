@@ -12,6 +12,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
+const querystring = require('querystring');
 
 process.on('SIGINT', () => {
     console.info('ctrl+c detected, exiting tinypin');
@@ -128,36 +129,23 @@ function decryptCookie(ciphertext){
 // handle auth
 app.use ( async (req, res, next) => {
 
-    // disable security
-    // req.user = {
-    //     id: 1,
-    //     name: 'a'
-    // };
-    // next();
-    // return;
-
-
-    
-    if ( req.originalUrl.startsWith("/up/") ){
-        console.log("got up!");
-        console.log("content type = " + req.headers['content-type']);
-        console.log(typeof(req.body));
-
-        await fs.writeFile('up.jpg', req.body);
-
-        res.send(OK);
-        
-        return;
+    // we will also accept the auth token in the x-api-key header
+    if ( req.headers["x-api-key"] ){
+        let apiKey = req.headers['x-api-key'];
+        try {
+            u = decryptCookie(decodeURIComponent(apiKey));
+            req.user = {
+                id: u.i,
+                name: u.u
+            };
+            console.log("api key accepted for user " + req.user.name);
+        } catch (e) {
+            console.log("invalid api key");
+            res.sendStatus(403);
+            return;
+        }
     }
 
-    if ( req.originalUrl.startsWith("/images/") ){
-        req.user = {
-            id: 1,
-            name: "a"
-        };
-        next();
-        return;
-    }
     // skip auth for pub resources
     // handle login and register paths
     if ( req.originalUrl.startsWith("/pub/") ){
