@@ -1,6 +1,11 @@
 // decorate on web socket functions.  if web sockets fail to work, the app should keep working anyway.
 // if you want to permanently disable websockets, just remove the src include 
 
+// the websocket is ONLY used to broadcast refresh notifications, no interesting data is passed
+// across the wire.  this is done because it can be harder to support certain security and proxy
+// modes for different browsers, particularly client ssl certifacts are not passed by safari.
+//
+// by not passing any interesting data, it's reasonably safe to let the websocket remain open
 window.socketConnected = false;
 window.socket = null;
 

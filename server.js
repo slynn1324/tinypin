@@ -126,7 +126,10 @@ function decryptCookie(ciphertext){
     return JSON.parse(deciphered);
 }
 
-// broadcast isn't user specific right now... 
+// accept websocket connections.  currently are parsing the userid from the path to 
+// map the connections to only notify on changes from the same user.
+// this simple mapping of holding all connections in memory here won't really scale beyond 
+// one server instance - but that's not really the use case for tinypin.
 app.ws('/ws/:uid', (ws, req) => {
     ws.on("message", (msg) => {
         //console.log("received messsage: " + msg);
