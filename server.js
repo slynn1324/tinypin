@@ -664,6 +664,8 @@ app.post("/up/", async (req, res) => {
     // return the newly created row
     let pin = db.prepare("SELECT * FROM pins WHERE userId = @userId and id = @pinId").get({userId: req.user.id, pinId: id});
     res.send(pin);
+
+    broadcast(req.user.id, {updateBoard:boardId});
     
     return;
 });
