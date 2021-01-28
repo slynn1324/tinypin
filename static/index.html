@@ -3,8 +3,10 @@
     <head>
         <title>tinypin</title>
         <meta charset="utf-8">
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="tinypin">
+        <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        
 
         <link rel="apple-touch-icon" sizes="180x180" href="pub/icons/apple-touch-icon.png">
         <link rel="icon" type="image/png" sizes="32x32" href="pub/icons/favicon-32x32.png">
@@ -19,20 +21,23 @@
         <link rel="stylesheet" href="pub/bulma-custom.css" />
         <link rel="stylesheet" href="lightgallery/css/lightgallery.min.css" />
         <link rel="stylesheet" href="client.css" />               
-        <script src="lightgallery/js/lightgallery-custom.js"></script>
+        
     </head>
     <body>
         <div id="app"></div>
 
         <div id="lightgallery"></div>
 
+
+        <script src="utils.js"></script>
+
+        <script src="lightgallery/js/lightgallery-custom.js"></script>
+
         <script src="reef.min.js"></script>
   
         <script src="reef-bootstrap.js"></script>
         <script src="reef-databind.js"></script>
         
-        <script src="utils.js"></script>
-
         <script src="components/navbar.js"></script>
         <script src="components/brickwall.js"></script>
         <!-- <script src="components/pinzoom.js"></script> -->

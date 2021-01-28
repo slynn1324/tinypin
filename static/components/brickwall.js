@@ -44,10 +44,19 @@ app.addSetter("brickwall.deletePin", async (data) => {
     store.do('loader.hide');
 });
 
-var supportsTouch = 'ontouchstart' in window;
-if ( supportsTouch ){
-    document.body.classList.add("supports-touch");
+function openOriginal(el){
+
+    let data = store.data;
+    let index = getLightGalleryIndex();
+    let pin = data.board.pins[index];
+    // alert(pin.id);
+
+    let path = getImagePath(pin.id, 'o');
+    // alert(path);
+    window.location = "https://sktp.quikstorm.net/" + path;
+
 }
+
 let lightgalleryElement = document.getElementById("lightgallery");
 let lightgalleryOpen = false;
 
@@ -57,13 +66,49 @@ function openLightGallery(pinId){
 
     let elements = [];
     let index = 0;
+
+    let maxWidth = window.innerWidth * window.devicePixelRatio;
+    let maxHeight = window.innerHeight * window.devicePixelRatio;
     
     for ( let i = 0; i < data.board.pins.length; ++i ){
-        elements.push({
-            src: getOriginalImagePath(data.board.pins[i].id),
-            subHtml: data.board.pins[i].description,
-            siteUrl: data.board.pins[i].siteUrl
-        });
+
+        let pin = data.board.pins[i];
+
+        let item = {};
+        item.subHtml = pin.description;
+        item.siteUrl = pin.siteUrl;
+        
+        const THUMBNAIL_IMAGE_SIZE = 400;
+        const IMAGE_SIZES = [400,800,1280,1920,2560];  //TODO: make this dynamic to share the server-side setting
+        // couldn't get srcset and sizes to work right with a vertical bounding box, so we'll just push the right image for the screen size.  This won't refresh on resize until closing & re-opening the lightgallery.
+        let maxSize = maxWidth;
+        let isPortrait = "n";
+        // portrait
+        if ( pin.originalHeight > pin.originalWidth ){
+            maxSize = maxHeight;
+            isPortrait = "y";
+        } 
+
+        maxSize = maxSize * 0.74; // take an image 74% smaller than the physical pixel count, we have 10% borders + prefer the smaller size file if it will be enlarged < 10% by the browser (74% just bumps ipad pro portrait into the 2048 size)
+                
+        let bestSize = -1;
+         
+        for ( let s = 0; s < IMAGE_SIZES.length; ++s ){
+            if ( maxSize <= IMAGE_SIZES[s] ){
+                bestSize = IMAGE_SIZES[s];
+                break;
+            }
+        }
+
+        if ( bestSize < 0 ){
+            bestSize = 'o';
+        }
+
+        item.src = getImagePath(pin.id, bestSize);
+        item.originalUrl = getImagePath(pin.id, 'o');
+        
+        elements.push(item);
+
         if ( data.board.pins[i].id == pinId ){
             index = i;
         }
@@ -82,6 +127,11 @@ function openLightGallery(pinId){
         startClass: '', // disable zoom
         backdropDuration: 0 // disable animate in
     };
+
+    // disable automatically hiding controls on touch devices, they can tap to hide.
+    if ( window.isTouch ){
+        options.hideBarsDelay = 0;
+    }
 
     lightGallery(lightgalleryElement, options );    
     lightgalleryOpen = true;
@@ -170,7 +220,7 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
 
             let boardImage = null;
             if ( board.titlePinId > 0 ){
-                boardImage = `<img class="thumb" src="${getThumbnailImagePath(board.titlePinId)}" />`;
+                boardImage = `<img class="thumb" src="${getImagePath(board.titlePinId, 400)}" />`;
             } else {
                 boardImage = `<div class="board-brick-missing-thumbnail"><img class="thumb" src="${missingThumbnailSrc}" /></div>`;
             }
@@ -196,7 +246,7 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
             return  { height: pin.thumbnailHeight, template: /*html*/`
             <div class="brick" >
                 <a data-pinid="${pin.id}" onclick="openLightGallery(${pin.id})" >
-                    <img class="thumb" src="${getThumbnailImagePath(pin.id)}" width="${pin.thumbnailWidth}" height="${pin.thumbnailHeight}"/>
+                    <img class="thumb" src="${getImagePath(pin.id, 400)}" width="${pin.thumbnailWidth}" height="${pin.thumbnailHeight}"/>
                 </a>
             </div>
             `};
@@ -236,7 +286,7 @@ app.addComponent('brickwall', (store) => { return new Reef('#brickwall', {
             for ( let c = 1; c < columns.length; ++c ){
                 if ( columns[c].height < shortestHeight ){
                     shortestIndex = c;
-                    shortestHeight = c.height;
+                    shortestHeight = columns[c].height;
                 }
             }
 

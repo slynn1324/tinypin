@@ -1,3 +1,5 @@
+( async () => {
+
 const yargs = require('yargs');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -57,6 +59,9 @@ const DB_PATH = path.resolve(argv['db-path']);
 const IMAGE_PATH = path.resolve(argv['image-path']);
 const PORT = argv.port;
 
+const THUMBNAIL_IMAGE_SIZE = 400;
+const ADDITIONAL_IMAGE_SIZES = [800,1280,1920,2560];
+
 console.log('tinypin starting...');
 console.log('');
 console.log(`version: ${VERSION}`);
@@ -74,7 +79,7 @@ console.log('');
 
 
 const db = betterSqlite3(DB_PATH);
-initDb();
+await initDb();
 
 const COOKIE_KEY = Buffer.from(db.prepare("SELECT value FROM properties WHERE key = ?").get('cookieKey').value, 'hex');
 
@@ -82,8 +87,10 @@ const COOKIE_KEY = Buffer.from(db.prepare("SELECT value FROM properties WHERE ke
 const app = express();
 app.use(express.static('public'));
 
+app.use(bodyParser.raw({type: 'image/jpeg', limit: '25mb'}));
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
+
 app.set('json spaces', 2);
 app.use(cookieParser());
 
@@ -121,9 +128,39 @@ function decryptCookie(ciphertext){
 // handle auth
 app.use ( async (req, res, next) => {
 
+    // disable security
+    // req.user = {
+    //     id: 1,
+    //     name: 'a'
+    // };
+    // next();
+    // return;
+
+
+    
+    if ( req.originalUrl.startsWith("/up/") ){
+        console.log("got up!");
+        console.log("content type = " + req.headers['content-type']);
+        console.log(typeof(req.body));
+
+        await fs.writeFile('up.jpg', req.body);
+
+        res.send(OK);
+        
+        return;
+    }
+
+    if ( req.originalUrl.startsWith("/images/") ){
+        req.user = {
+            id: 1,
+            name: "a"
+        };
+        next();
+        return;
+    }
     // skip auth for pub resources
     // handle login and register paths
-    if ( req.originalUrl.startsWith("/pub/")){
+    if ( req.originalUrl.startsWith("/pub/") ){
         next();
         return;
     } if ( req.method == "GET" && req.originalUrl == "/login" ){
@@ -224,10 +261,20 @@ app.use( (req, res, next) => {
         res.setHeader('Cache-control', `private, max-age=2592000000`); // 30 days
         res.sendFile(filepath); 
 
+    } else if ( req.method == "GET" && req.originalUrl.startsWith("/dl/") ){
+        
+        let path = req.originalUrl.replace("/dl/", "/images/");
+
+        let filepath = IMAGE_PATH + "/" + req.user.id + "/" + path;
+        res.setHeader("Content-Disposition", 'attachment; filename="image.jpg');
+        res.sendFile(filepath);
+
     } else {
         next();
     }
 });
+
+
 
 app.use(express.static('static'));
 
@@ -332,8 +379,15 @@ app.delete("/api/boards/:boardId", async (req, res) => {
 
         let pins = db.prepare("SELECT id FROM pins WHERE userId = @userId and boardId = @boardId").all({userId:req.user.id, boardId:req.params.boardId});
         for ( let i = 0; i < pins.length; ++i ){
-            await fs.unlink(getThumbnailImagePath(req.user.id, pins[i].id).file);
-            await fs.unlink(getOriginalImagePath(req.user.id, pins[i].id).file);
+
+            await fs.unlink(getImagePath(req.user.id, pins[i].id, 'o').file);
+
+            await fs.unlink(getImagePath(req.user.id, pins[i].id, THUMBNAIL_IMAGE_SIZE).file);
+
+            for ( let s = 0; s < ADDITIONAL_IMAGE_SIZES.length; ++s ){
+                await fs.unlink(getImagePath(req.user.id, pins[i].id, ADDITIONAL_IMAGE_SIZES[s]).file);
+            }
+
         }
 
         let result = db.prepare("DELETE FROM pins WHERE userId = @userId and boardId = @boardId").run({userId:req.user.id, boardId:req.params.boardId});
@@ -369,6 +423,7 @@ app.get("/api/pins/:pinId", (req, res) => {
 app.post("/api/pins", async (req, res) => {
     try {
 
+        // download the image first to make sure we can get it
         let image = await downloadImage(req.body.imageUrl);
         
         let result = db.prepare(`INSERT INTO PINS (
@@ -411,15 +466,7 @@ app.post("/api/pins", async (req, res) => {
         
         let id = result.lastInsertRowid;
 
-        // write the images to disk
-        let originalImagePath = getOriginalImagePath(req.user.id, id);
-        let thumbnailImagePath = getThumbnailImagePath(req.user.id, id);
-        await fs.mkdir(originalImagePath.dir, {recursive: true});
-        await fs.mkdir(thumbnailImagePath.dir, {recursive: true});
-        await fs.writeFile(originalImagePath.file, image.original.buffer);
-        console.log(`Saved original to: ${originalImagePath.file}`);
-        await fs.writeFile(thumbnailImagePath.file, image.thumbnail.buffer);
-        console.log(`Saved thumbnail to: ${thumbnailImagePath.file}`);
+        await saveImage(req.user.id, id, image);
 
         // return the newly created row
         let pin = db.prepare("SELECT * FROM pins WHERE userId = @userId and id = @pinId").get({userId: req.user.id, pinId: id});
@@ -468,8 +515,12 @@ app.delete("/api/pins/:pinId", async (req, res) => {
         let result = db.prepare('DELETE FROM pins WHERE userId = @userId and id = @pinId').run({userId: req.user.id, pinId:req.params.pinId});
 
         if ( result.changes == 1 ){
-            await fs.unlink(getThumbnailImagePath(req.user.id, req.params.pinId).file);
-            await fs.unlink(getOriginalImagePath(req.user.id, req.params.pinId).file);
+            await fs.unlink(getImagePath(req.user.id, req.params.pinId, 'o').file);
+            await fs.unlink(getImagePath(req.user.id, req.params.pinId, THUMBNAIL_IMAGE_SIZE).file);
+
+            for ( let s = 0; s < ADDITIONAL_IMAGE_SIZES.length; ++s ){
+                await fs.unlink(getImagePath(req.user.id, req.params.pinId, ADDITIONAL_IMAGE_SIZES[s]).file);
+            }
 
             console.log(`deleted pin#${req.params.pinId}`);
             res.send(OK);
@@ -482,6 +533,77 @@ app.delete("/api/pins/:pinId", async (req, res) => {
     }
 });
 
+app.post("/up/", async (req, res) => {
+    console.log("got up!");
+    console.log("content type = " + req.headers['content-type']);
+    let boardName = req.headers['board-name'].trim();
+    console.log("board name = " + req.headers['board-name']);
+    console.log(typeof(req.body));
+
+    let result = db.prepare("SELECT id FROM boards WHERE name = @name and userId = @userId").get({name: boardName, userId: req.user.id});
+
+    let boardId = null;
+
+    if ( result ){
+        boardId = result.id;
+    } else {
+        result = db.prepare("INSERT INTO boards (name, userId, hidden, createDate) VALUES (@name, @userId, @hidden, @createDate)").run({name: boardName, userId: req.user.id, hidden: null, createDate: new Date().toISOString()});
+        boardId = result.lastInsertRowid;
+    }
+
+    console.log("boardId=" + boardId);
+
+    let image = await processImage(req.body);
+
+    result = db.prepare(`INSERT INTO PINS (
+        boardId, 
+        imageUrl, 
+        siteUrl, 
+        description, 
+        sortOrder, 
+        originalHeight, 
+        originalWidth, 
+        thumbnailHeight, 
+        thumbnailWidth, 
+        userId,
+        createDate
+    ) VALUES (
+        @boardId, 
+        @imageUrl, 
+        @siteUrl, 
+        @description, 
+        @sortOrder, 
+        @originalHeight, 
+        @originalWidth, 
+        @thumbnailHeight, 
+        @thumbnailWidth, 
+        @userId,
+        @createDate)
+    `).run({
+        boardId: boardId,
+        imageUrl: null,
+        siteUrl: null,
+        description: null,
+        sortOrder: null,
+        originalHeight: image.original.height,
+        originalWidth: image.original.width,
+        thumbnailHeight: image.thumbnail.height,
+        thumbnailWidth: image.thumbnail.width,
+        userId: req.user.id,
+        createDate: new Date().toISOString()
+    });
+
+    let id = result.lastInsertRowid;
+
+    await saveImage(req.user.id, id, image);
+
+    // return the newly created row
+    let pin = db.prepare("SELECT * FROM pins WHERE userId = @userId and id = @pinId").get({userId: req.user.id, pinId: id});
+    res.send(pin);
+    
+    return;
+});
+
 
 
 // start listening
@@ -490,7 +612,7 @@ app.listen(PORT, () => {
     console.log('');
 });
 
-function initDb(){   
+async function initDb(){   
 
     console.log("initializing database...");
 
@@ -600,10 +722,67 @@ function initDb(){
         })();
     }
 
+    if ( schemaVersion < 3 ){
+        // image file re-organization, additional sizes
+        console.log("  running migration v3");
+
+        let pins = db.prepare(`SELECT * FROM pins`).all();
+
+        if ( require("fs").existsSync(`${IMAGE_PATH}`) ){
+            let userdirs = await fs.readdir(IMAGE_PATH);
+            console.log("  migrating images");
+            for ( let i = 0; i < userdirs.length; ++i ){       
+                if ( require("fs").existsSync(`${IMAGE_PATH}/${userdirs[i]}/images/originals`) ){
+                    await fs.rename(`${IMAGE_PATH}/${userdirs[i]}/images/originals`, `${IMAGE_PATH}/${userdirs[i]}/images/o`);
+                }
+                if ( require("fs").existsSync(`${IMAGE_PATH}/${userdirs[i]}/images/thumbnails`) ){
+                    await fs.rename(`${IMAGE_PATH}/${userdirs[i]}/images/thumbnails`, `${IMAGE_PATH}/${userdirs[i]}/images/400`);
+                }
+            }
+        }
+        
+        if ( pins.length > 0 ){
+            console.log("  generating additional image sizes...");
+        } 
+
+        for ( let i = 0; i < pins.length; ++i ){
+            let pin = pins[i];
+            let originalImagePath = getImagePath(pin.userId, pin.id, 'o');
+            
+            for ( let i = 0; i < ADDITIONAL_IMAGE_SIZES.length; ++i ){
+                let size = ADDITIONAL_IMAGE_SIZES[i];
+            
+                let img = await sharp(originalImagePath.file);
+                let resizedImg = await img.resize({width: size, height: size, fit: 'inside'})
+                let buf = await resizedImg.toBuffer();
+        
+                let imgPath = getImagePath(pin.userId, pin.id, size);
+                await fs.mkdir(imgPath.dir, {recursive:true});
+                await fs.writeFile(imgPath.file, buf);
+                console.log(`   saved additional size ${size} for pin#${pin.id} to: ${imgPath.file}`);
+            }
+
+        }
+
+        if ( pins.length > 0 ){
+            console.log("  finished generating addditional image sizes");
+        }
+
+        db.prepare(`
+        INSERT INTO migrations (id, createDate) VALUES ( @id, @createDate )
+        `).run({id:3, createDate: new Date().toISOString()});
+
+        schemaVersion = 3;
+    }
+
     console.log(`database ready - schema version v${schemaVersion}`);
     console.log('');
 }
 
+/**
+ * Downloads the image, converts it to JPG, and creates the thumbnail size so that standard dimensions can be taken
+ * @param {string} imageUrl 
+ */
 async function downloadImage(imageUrl){
 
     let res = await fetch(imageUrl);
@@ -614,11 +793,15 @@ async function downloadImage(imageUrl){
 
     let buffer = await res.buffer();
 
-    let original = sharp(buffer);
-    let originalMetadata = await original.metadata();
-    let originalBuffer = await original.toFormat("jpg").toBuffer();
+    return await processImage(buffer);
+}
 
-    let thumbnail = await original.resize({ width: 400, height: 400, fit: 'inside' });
+async function processImage(buffer){
+    let original = sharp(buffer);
+    let originalBuffer = await original.toFormat("jpg").toBuffer();  
+    let originalMetadata = await original.metadata();
+
+    let thumbnail = await original.resize({ width: THUMBNAIL_IMAGE_SIZE, height: THUMBNAIL_IMAGE_SIZE, fit: 'inside' });
     let thumbnailBuffer = await thumbnail.toBuffer();
     let thumbnailMetadata = await sharp(thumbnailBuffer).metadata();
 
@@ -636,17 +819,43 @@ async function downloadImage(imageUrl){
     }
 }
 
+// takes the response from downloadImage, creates ADDITIONAL_IMAGE_SIZE and writes all files to disk
+async function saveImage(userId, pinId, image){
 
-function getOriginalImagePath(userId, pinId){
-    let paddedId = pinId.toString().padStart(12, '0');
-    let dir = `${IMAGE_PATH}/${userId}/images/originals/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
-    let file = `${dir}/${paddedId}.jpg`;
-    return {dir: dir, file: file};
+
+    let originalImagePath = getImagePath(userId, pinId, 'o');
+    await fs.mkdir(originalImagePath.dir, {recursive: true});
+    await fs.writeFile(originalImagePath.file, image.original.buffer);
+    console.log(`saved original to: ${originalImagePath.file}`);
+
+    let thumbnailImagePath = getImagePath(userId, pinId, '400');
+    await fs.mkdir(thumbnailImagePath.dir, {recursive: true});
+    await fs.writeFile(thumbnailImagePath.file, image.thumbnail.buffer);
+    console.log(`saved thumbnail to: ${thumbnailImagePath.file}`);
+
+    // this will enlarge images if necessary, as the lanczos3 resize algorithm will create better looking enlargements than the browser will
+    for ( let i = 0; i < ADDITIONAL_IMAGE_SIZES.length; ++i ){
+        let size = ADDITIONAL_IMAGE_SIZES[i];
+        
+        let img = await sharp(image.original.buffer);
+        let resizedImg = await img.resize({width: size, height: size, fit: 'inside'})
+        let buf = await resizedImg.toBuffer();
+
+        let imgPath = getImagePath(userId, pinId, size);
+        await fs.mkdir(imgPath.dir, {recursive:true});
+        await fs.writeFile(imgPath.file, buf);
+        console.log(`saved additional size ${size} to: ${imgPath.file}`);
+    }
+
 }
 
-function getThumbnailImagePath(userId, pinId){
+
+function getImagePath(userId, pinId, size){
     let paddedId = pinId.toString().padStart(12, '0');
-    let dir = `${IMAGE_PATH}/${userId}/images/thumbnails/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
+    let dir = `${IMAGE_PATH}/${userId}/images/${size}/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
     let file = `${dir}/${paddedId}.jpg`;
-    return {dir: dir, file: file};
+    return { dir: dir, file: file};
 }
+
+
+})();

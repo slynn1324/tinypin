@@ -3,17 +3,18 @@ function getOriginalImagePath(pinId){
         return "";
     }
     let paddedId = pinId.toString().padStart(12, '0');
-    let dir = `images/originals/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
+    let dir = `images/o/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
     let file = `${dir}/${paddedId}.jpg`;
     return file;
 }
 
-function getThumbnailImagePath(pinId){
+function getImagePath(pinId, size){
     if ( !pinId ){
         return "";
     }
+
     let paddedId = pinId.toString().padStart(12, '0');
-    let dir = `images/thumbnails/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
+    let dir = `images/${size}/${paddedId[11]}/${paddedId[10]}/${paddedId[9]}/${paddedId[8]}`;
     let file = `${dir}/${paddedId}.jpg`;
     return file;
 }
@@ -58,4 +59,28 @@ function getPinIndexById(id){
 
 function getPinById(id){
     return store.data.board.pins[getPinIndexById(id)];
+}
+
+// feature detection
+if ( 'ontouchstart' in window ){
+    window.isTouch = true;
+    document.body.classList.add("is-touch");
+}
+
+if ([
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod'
+    ].includes(navigator.platform)
+    // iPad on iOS 13 detection
+    || (navigator.userAgent.includes("Mac") && "ontouchend" in document) ){
+
+
+    window.iOS = true;
+    document.body.classList.add("is-ios");
+} else {
+    window.iOS = false;
 }

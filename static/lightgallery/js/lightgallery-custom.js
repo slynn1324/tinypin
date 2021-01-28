@@ -594,7 +594,7 @@
     
             
             // tinypin -- add controls
-            this.outer.querySelector('.lg-toolbar').insertAdjacentHTML('beforeend', '<a id="lg-deletePin" class="lg-icon" data-onclick="brickwall.deletePin"></a><a id="lg-siteUrl" class="lg-icon" target="_blank"></a><a id="lg-edit" class="lg-icon" data-onclick="brickwall.editPin"></a>');
+            this.outer.querySelector('.lg-toolbar').insertAdjacentHTML('beforeend', '<a id="lg-deletePin" class="lg-icon" data-onclick="brickwall.deletePin"></a><a id="lg-siteUrl" class="lg-icon" target="_blank"></a><a id="lg-edit" class="lg-icon" data-onclick="brickwall.editPin"></a><a id="lg-iosShare" class="lg-icon"></a><a id="lg-openOriginal" class="lg-icon" download></a>');
 
             if (this.s.download) {
                 this.outer.querySelector('.lg-toolbar').insertAdjacentHTML('beforeend', '<a id="lg-download" aria-label="Download" target="_blank" download class="lg-download lg-icon"></a>');
@@ -1036,7 +1036,15 @@
                 } else {
                     siteUrlEl.classList.add("lg-control-hide");
                 }
+
+                let openOriginalEl = document.getElementById("lg-openOriginal");
+                openOriginalEl.setAttribute("href", _this.s.dynamicEl[index].originalUrl);
     
+                let iosShareEl = document.getElementById("lg-iosShare");
+                iosShareEl.setAttribute("href", "shortcuts://run-shortcut?name=Open%20In&input=" + encodeURIComponent("https://sktp.quikstorm.net/" + _this.s.dynamicEl[index].originalUrl));
+
+                // end tinypin
+
                 _lgUtils2.default.trigger(_this.el, 'onBeforeSlide', {
                     prevIndex: _prevIndex,
                     index: index,

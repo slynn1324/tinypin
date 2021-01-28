@@ -137,7 +137,7 @@ app.addComponent('editPinModal', (store) => { return new Reef("#editPinModal", {
                     <div class="add-pin-flex">
 
                         <div class="add-pin-flex-left">
-                            <img src="${data.editPinModal.pin ? getThumbnailImagePath(data.editPinModal.pin.id) : ''}" />
+                            <img src="${data.editPinModal.pin ? getImagePath(data.editPinModal.pin.id, 400) : ''}" />
                         </div>
 
                         <div class="add-pin-flex-right">

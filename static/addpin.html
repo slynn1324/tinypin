@@ -20,6 +20,8 @@
         <link rel="stylesheet" href="client.css" />               
     </head>
     <body>
+
+        <div id="ilen"></div>
         <div id="app"></div>
 
         <script src="reef.min.js"></script>
@@ -28,6 +30,9 @@
         <script src="reef-databind.js"></script>
         
         <script>
+
+document.getElementById("ilen").innerHTML = window.location.hash.length;
+
 Reef.debug(true);
 
 app.addSetter("render", (data) => {
@@ -163,6 +168,7 @@ app.addSetter('addPinModal.save', async (data) => {
 
     if ( res.status == 200 ){
         window.localStorage.addPinLastBoardId = boardId;
+        data.done = true;
         window.close();
     } 
 
@@ -187,7 +193,8 @@ const store = new Reef.Store({
             description: "",
             saveInProgress: false
         },
-        initialized: false
+        initialized: false,
+        done: false
     },
     getters: app.getGetters(),
     setters: app.getSetters()
@@ -205,6 +212,7 @@ const appComponent = new Reef("#app", {
             </div>`;
         }
 
+        // 
         let imagePlaceholder = 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22300%22%3E%3Crect%20x%3D%222%22%20y%3D%222%22%20width%3D%22300%22%20height%3D%22300%22%20style%3D%22fill%3A%23dedede%3B%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-size%3D%2218%22%20text-anchor%3D%22middle%22%20alignment-baseline%3D%22middle%22%20font-family%3D%22monospace%2C%20sans-serif%22%20fill%3D%22%23555555%22%3Eimage%3C%2Ftext%3E%3C%2Fsvg%3E';
 
         let options = "";
@@ -225,12 +233,25 @@ const appComponent = new Reef("#app", {
         }
 
         return /*html*/`
+        <div id="doneModal">
+            <div class="modal ${data.done ? 'is-active' : ''}">
+                <div class="modal-background"></div>
+                    <div class="modal-content">
+                        <div class="box has-text-centered" style="max-width: 90%; margin-left: auto; margin-right: auto;">
+                            <!-- https://thenounproject.com/search/?q=done&i=587164 -->
+                            <img style="width: 80px; height: 80px;" src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjNGU4ODJiIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMTAwIDEwMCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PGc+PGc+PHBhdGggZmlsbD0iIzRlODgyYiIgZD0iTTY5LjQzNyw0My4zMDNsLTI0LjEyLDI1Ljc1M2MtMC44MTcsMC44NzEtMS44NTEsMS4zMDctMi45OTUsMS4zMDdzLTIuMjMyLTAuNDM2LTIuOTk1LTEuMzA3ICAgIEwyNy4yNDEsNTYuMTUyYy0xLjUyNC0xLjYzMy0xLjQ3LTQuMTkyLDAuMjE4LTUuNzcxYzEuNjMzLTEuNTI1LDQuMTkyLTEuNDE2LDUuNzcxLDAuMjE4bDkuMDkzLDkuNjkxbDIxLjE4LTIyLjU5NSAgICBjMS41MjQtMS42MzMsNC4xMzgtMS43NDIsNS43NzEtMC4xNjNDNzAuOTA3LDM5LjA1Niw3MS4wMTYsNDEuNjE1LDY5LjQzNyw0My4zMDN6Ij48L3BhdGg+PHBhdGggZmlsbD0iIzRlODgyYiIgZD0iTTUuMDgyLDUwQzUuMDgyLDI1LjIyNywyNS4xNzIsNS4xMzYsNTAsNS4wODJDNzQuNzczLDUuMTM2LDk0LjkxOCwyNS4yMjcsOTQuOTE4LDUwICAgIGMwLDI0LjgyOC0yMC4xNDUsNDQuOTE4LTQ0LjkxOCw0NC45MThDMjUuMTcyLDk0LjkxOCw1LjA4Miw3NC44MjgsNS4wODIsNTB6IE0yMy45NzUsNzYuMDI1ICAgIEMzMC42NzIsODIuNjY4LDM5LjgxOSw4Ni43NTEsNTAsODYuNzUxYzEwLjEyNywwLDE5LjMyOC00LjA4MywyNS45NzEtMTAuNzI2YzYuNjQyLTYuNjk3LDEwLjc4LTE1Ljg0NCwxMC43OC0yNi4wMjUgICAgYzAtMTAuMTI3LTQuMTM4LTE5LjI3NC0xMC43OC0yNS45NzFDNjkuMzI4LDE3LjM4Nyw2MC4xMjcsMTMuMjQ5LDUwLDEzLjI0OWMtMTAuMTgxLDAtMTkuMzI4LDQuMTM4LTI2LjAyNSwxMC43OCAgICBDMTcuMzMyLDMwLjcyNiwxMy4yNDksMzkuODczLDEzLjI0OSw1MEMxMy4yNDksNjAuMTgxLDE3LjMzMiw2OS4zMjgsMjMuOTc1LDc2LjAyNXoiPjwvcGF0aD48L2c+PC9nPjwvc3ZnPg==" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="addPinModal">
-        <div class="modal is-active">
+        <div class="modal ${!data.done ? 'is-active' : ''}">
             <div class="modal-background"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">Add Pin ${data.addPinModal.boardId}</p>
+                    <p class="modal-card-title">Add Pin ${window.location.hash.length}</p>
                     <div id="loader" class="button is-text ${data.loading ? 'is-loading' : ''}"></div>
                 </header>
                 <section class="modal-card-body">
