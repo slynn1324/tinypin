@@ -430,3 +430,16 @@ body.socketConnected #socketConnected {
     opacity: 0;
     transform: translate3d(0,-10px,0);
 }
+
+.is-touch .navbar-burger:hover {
+    background-color: transparent;
+}
+
+.is-touch .navbar.is-light .navbar-brand > a.navbar-item:focus, 
+.is-touch .navbar.is-light .navbar-brand > a.navbar-item:hover, 
+.is-touch .navbar.is-light .navbar-brand > a.navbar-item.is-active, 
+.is-touch .navbar.is-light .navbar-brand .navbar-link:focus, 
+.is-touch .navbar.is-light .navbar-brand .navbar-link:hover, 
+.is-touch .navbar.is-light .navbar-brand .navbar-link.is-active {
+    background-color: transparent;
+}

@@ -57,6 +57,21 @@ function openOriginal(el){
 
 }
 
+async function iosShare(){
+    let data = store.data;
+
+    let index = getLightGalleryIndex();
+    let pin = data.board.pins[index];
+
+    let result = await fetch("/api/pins/" + pin.id + "/otl", {method: 'POST'});
+    let obj = await result.json();
+    let t = obj.t;
+
+    let url = "https://sktp.quikstorm.net/otl/" + t;
+
+    window.location = "shortcuts://run-shortcut?name=Open%20In&input=" + encodeURIComponent(url);
+}
+
 let lightgalleryElement = document.getElementById("lightgallery");
 let lightgalleryOpen = false;
 

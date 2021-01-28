@@ -86,7 +86,7 @@ app.addSetter('load.user', async (data) => {
     data.user = await res.json();
 
     window.uid = data.user.id;
-    window.socketConnect();
+    dispatchSocketConnect();
 
     store.do("loader.hide");
 });
@@ -104,6 +104,10 @@ app.addSetter("hash.update", (data) => {
         data.aboutModal.active = false;
     }
 });
+
+function dispatchSocketConnect(){
+    window.dispatchEvent(new CustomEvent("socket-connect"));
+}
 
 let store = new Reef.Store({
     data: {
@@ -278,5 +282,5 @@ appComponent.render();
 window.addEventListener("focus", () => {
     store.do("load.boards");
     store.do("load.board");
-    window.dispatchEvent(new CustomEvent("socket-connect"));
+    dispatchSocketConnect();
 });

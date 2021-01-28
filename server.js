@@ -160,6 +160,27 @@ app.use ( async (req, res, next) => {
         }
     }
 
+
+    // handle one-time-links for images
+    if ( req.originalUrl.startsWith("/otl/" ) ){
+        try{
+            let token = decryptCookie(req.originalUrl.substr(5));
+            
+            // expire tokens in 5 minutes
+            if ( new Date().getTime() - token.t > 300000 ){ // 5 minutes
+                res.status(404).send(NOT_FOUND);
+                return;
+            }
+
+            let imagePath = getImagePath(token.u, token.p, 'o');
+            res.sendFile(imagePath.file);
+            return;
+        } catch (e){
+            res.status(404).send(NOT_FOUND);
+            return;
+        }
+    }
+
     // skip auth for pub resources
     // handle login and register paths
     if ( req.originalUrl.startsWith("/pub/") ){
@@ -529,6 +550,20 @@ app.post("/api/pins/:pinId", (req,res) => {
 
 });
 
+// get a one-time-link for an image
+app.post("/api/pins/:pinId/otl", (req,res) => {
+
+    let data = {
+        u: req.user.id,
+        p: req.params.pinId,
+        t: new Date().getTime()
+    };
+
+    let token = encryptCookie(data);
+
+    res.status(200).send({t: token});
+});
+
 // delete pin
 app.delete("/api/pins/:pinId", async (req, res) => {
     try {
@@ -628,10 +663,6 @@ app.post("/up/", async (req, res) => {
     res.send(pin);
     
     return;
-});
-
-app.get("/otl/:l", (req, res) => {
-
 });
 
 

@@ -14,6 +14,7 @@ app.addSetter("navbar.logout", () => {
     window.location = "./logout";
 });
 
+
 app.addComponent('navbar', (store) => { return new Reef("#navbar", {
     store: store,
     template: (data) => {
@@ -76,7 +77,7 @@ app.addComponent('navbar', (store) => { return new Reef("#navbar", {
                 ${boardName}
                 <span id="loader-mobile" class="navbar-item" style="position: relative; margin-left: auto;">
                     <div id="loader" class="button is-text ${data.loading ? 'is-loading' : ''}"></div>
-                    <div id="socketConnected" class="button is-text"></div>
+                    <div id="socketConnected" class="button is-text" data-onclick-x="dispatchSocketConnect"></div>
                 </span>
                 
 
