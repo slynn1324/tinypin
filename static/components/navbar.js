@@ -76,7 +76,9 @@ app.addComponent('navbar', (store) => { return new Reef("#navbar", {
                 ${boardName}
                 <span id="loader-mobile" class="navbar-item" style="position: relative; margin-left: auto;">
                     <div id="loader" class="button is-text ${data.loading ? 'is-loading' : ''}"></div>
+                    <div id="socketConnected" class="button is-text"></div>
                 </span>
+                
 
                 <a role="button" class="navbar-burger ${data.menuOpen ? 'is-active' : ''}" aria-label="menu" aria-expanded="false" data-onclick="navbar.toggleMenu">
                     <span aria-hidden="true"></span>

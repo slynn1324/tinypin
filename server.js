@@ -86,12 +86,12 @@ const COOKIE_KEY = Buffer.from(db.prepare("SELECT value FROM properties WHERE ke
 
 // express config
 const app = express();
-app.use(express.static('public'));
+const expressWs = require('express-ws')(app);
 
+app.use(express.static('public'));
 app.use(bodyParser.raw({type: 'image/jpeg', limit: '25mb'}));
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
-
 app.set('json spaces', 2);
 app.use(cookieParser());
 
@@ -124,6 +124,20 @@ function decryptCookie(ciphertext){
     let deciphered = decipher.update(components.join(':'), 'hex', 'utf8');
     deciphered += decipher.final('utf8');
     return JSON.parse(deciphered);
+}
+
+// broadcast isn't user specific right now... 
+app.ws('/ws/:uid', (ws, req) => {
+    ws.on("message", (msg) => {
+        //console.log("received messsage: " + msg);
+    });
+    console.log("socket opened for user " + req.params.uid);
+});
+
+function broadcast(uid, msg){
+    for ( let socket of expressWs.getWss('/ws/' + uid).clients ){
+        socket.send(JSON.stringify(msg));
+    }
 }
 
 // handle auth
@@ -283,7 +297,7 @@ const SERVER_ERROR = {status: "error", error: "server error"};
 
 
 app.get("/api/whoami", (req, res) => {
-    res.send({name: req.user.name, version: VERSION});
+    res.send({name: req.user.name, version: VERSION, id: req.user.id});
 });
 
 // list boards
@@ -335,7 +349,8 @@ app.post('/api/boards', (req, res) => {
         board.titlePinId = 0;
         res.send(board);
         console.log(`Created board#${id} ${req.body.name}`);
-        
+
+        broadcast(req.user.id, {b:id});
     } catch (err){
         console.log("Error creating board: " + err.message);
         if ( err.message.includes('UNIQUE constraint failed:') ){
@@ -383,6 +398,7 @@ app.delete("/api/boards/:boardId", async (req, res) => {
 
         if ( result.changes == 1 ){
             res.send(OK);
+            broadcast(req.user.id, {deleteBoard: req.params.boardId});
         } else {
             res.status(404).send(NOT_FOUND);
         }
@@ -410,6 +426,18 @@ app.get("/api/pins/:pinId", (req, res) => {
 // create pin
 app.post("/api/pins", async (req, res) => {
     try {
+
+        let boardId = req.body.boardId;
+
+        if ( boardId == "new" ){
+            try {
+                let result = db.prepare("INSERT INTO boards (name, userId, hidden, createDate) VALUES (@name, @userId, @hidden, @createDate)").run({name: req.body.newBoardName, userId: req.user.id, hidden: 0, createDate: new Date().toISOString()});
+                boardId = result.lastInsertRowid;
+            } catch (e){
+                console.log("error creating new board: ", err);
+                res.status(500).send(SERVER_ERROR);
+            }
+        }
 
         // download the image first to make sure we can get it
         let image = await downloadImage(req.body.imageUrl);
@@ -439,7 +467,7 @@ app.post("/api/pins", async (req, res) => {
             @userId,
             @createDate)
         `).run({
-            boardId: req.body.boardId,
+            boardId: boardId,
             imageUrl: req.body.imageUrl,
             siteUrl: req.body.siteUrl,
             description: req.body.description,
@@ -460,12 +488,15 @@ app.post("/api/pins", async (req, res) => {
         let pin = db.prepare("SELECT * FROM pins WHERE userId = @userId and id = @pinId").get({userId: req.user.id, pinId: id});
         res.send(pin);
 
+        broadcast(req.user.id, {updateBoard:boardId});
+
     } catch (err) {
         console.log(`Error creating pin: ${err.message}`, err);
         res.status(500).send(SERVER_ERROR);
     }
 });
 
+// create pin
 app.post("/api/pins/:pinId", (req,res) => {
 
     try {
@@ -487,6 +518,7 @@ app.post("/api/pins/:pinId", (req,res) => {
         if ( result.changes == 1 ){
             console.log(`updated pin#${req.params.pinId}`)
             res.send(OK);
+            broadcast(req.user.id, {updateBoard:req.body.boardId});
         } else {
             res.status(404).send(NOT_FOUND);
         }
@@ -497,8 +529,11 @@ app.post("/api/pins/:pinId", (req,res) => {
 
 });
 
+// delete pin
 app.delete("/api/pins/:pinId", async (req, res) => {
     try {
+
+        let pin = db.prepare('SELECT * FROM pins WHERE userId = @userId and id = @pinId').get({userId: req.user.id, pinId:req.params.pinId});
 
         let result = db.prepare('DELETE FROM pins WHERE userId = @userId and id = @pinId').run({userId: req.user.id, pinId:req.params.pinId});
 
@@ -512,6 +547,9 @@ app.delete("/api/pins/:pinId", async (req, res) => {
 
             console.log(`deleted pin#${req.params.pinId}`);
             res.send(OK);
+
+            broadcast(req.user.id, {updateBoard:pin.boardId});
+            
         } else {
             res.status(404).send(NOT_FOUND);
         }
@@ -590,6 +628,10 @@ app.post("/up/", async (req, res) => {
     res.send(pin);
     
     return;
+});
+
+app.get("/otl/:l", (req, res) => {
+
 });
 
 

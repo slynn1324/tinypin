@@ -48,26 +48,9 @@ app.addSetter('addPinModal.save', async (data) => {
 
     let boardId = data.addPinModal.boardId;
 
-    let newBoard = null;
-
-    if ( boardId == "new" ){
-        let res = await fetch('api/boards', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                "name": data.addPinModal.newBoardName
-            })
-        });
-
-        if ( res.status == 200 ){
-            newBoard = await res.json();
-            boardId = newBoard.id;
-            data.boards.push(newBoard);
-        }
-    }
-
     let postData = {
         boardId: boardId,
+        newBoardName: data.addPinModal.newBoardName,
         imageUrl: data.addPinModal.imageUrl,
         siteUrl: data.addPinModal.siteUrl,
         description: data.addPinModal.description
@@ -80,20 +63,21 @@ app.addSetter('addPinModal.save', async (data) => {
         },
         body: JSON.stringify(postData)
     });
-
+   
     if ( res.status == 200 ){
         
         let body = await res.json();
         if ( data.board && data.board.id == boardId ){
             data.board.pins.push(body);
         }
-        
-        if ( newBoard ){
-            newBoard.titlePinId = body.id;
-        }
 
         window.localStorage.addPinLastBoardId = boardId;
         store.do("addPinModal.close");
+
+        // if we don't have a listening socket, we need to trigger our own update
+        if ( boardId == "new" && !window.socketConnected ){
+            store.do("load.boards");
+        } 
     } 
 
     store.do("loader.hide");

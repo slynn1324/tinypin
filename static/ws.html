@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head></head>
+    <body>
+        ws test
+        <button onclick="sendMessage()">send</button>
+        <script>
+
+let socket = new WebSocket(getSocketUrl());
+
+socket.onopen = (e) => {
+    console.log("[open] connection establised");
+    console.log("sending to server");
+    socket.send("hello");
+};
+
+socket.onmessage = (e) => {
+    console.log("got message: " + e.data);
+}
+
+socket.onclose = (e) => {
+    console.log("socket closed - wasClean=" + e.wasClean + " code=" + e.code + " reason=" + e.reason);
+}
+
+socket.onerror = (e) => {
+    console.log("error: " + e.message);
+}
+
+function sendMessage(){
+    socket.send("hello");
+}
+
+
+function getSocketUrl(){
+    var loc = window.location, new_uri;
+    if (loc.protocol === "https:") {
+        new_uri = "wss:";
+    } else {
+        new_uri = "ws:";
+    }
+    new_uri += "//" + loc.host;
+    // if ( loc.port ){
+    //     new_uri += ":" + loc.port
+    // }
+    new_uri += "/ws";
+    return new_uri;
+}
+
+        </script>
+    </body>
+</html>

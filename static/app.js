@@ -25,13 +25,56 @@ app.addSetter("load.boards", async (data) => {
     store.do("loader.hide");
 });
 
-app.addSetter('load.board', async (data) => {
+// handle update events 
+window.addEventListener("broadcast", async (e) => {
+    
+    let data = store.data;
+
+    if ( e.detail.updateBoard ){
+        console.log("updating board");
+        let boardId = e.detail.updateBoard;
+    
+        let boardExists = false;
+        for ( let i = 0; i < data.boards.length; ++i ){
+            if ( data.boards[i].id == boardId ){
+                boardExists = true;
+            }
+        }
+
+        // if it's a new board
+        if ( !boardExists ){
+            store.do("load.boards");   
+        }
+
+        // if we are currently viewing this board, reload the pins
+        if ( data.board && boardId == data.board.id ){
+            store.do("load.board", true);
+        }
+    } else if ( e.detail.deleteBoard ) {
+        console.log("deleting board");
+        let boardId = e.detail.deleteBoard;
+
+        // reload the boards
+        store.do("load.boards");
+
+        // we're currently looking at this board... alert and error
+        if ( data.board && boardId == data.board.id ){
+            window.alert("this board has been deleted on another device");
+            window.location.hash = "#";
+        }
+    }
+
+});
+
+app.addSetter('load.board', async (data, force) => {
     store.do("loader.show");
 
-    if ( !data.board || data.board.id != data.hash.board ){
-        let res = await fetch("/api/boards/" + data.hash.board);
-        data.board = await res.json();
-    } 
+    if ( data.hash.board ){
+        if ( force || !data.board || data.board.id != data.hash.board ){
+            let res = await fetch("/api/boards/" + data.hash.board);
+            data.board = await res.json();
+        } 
+    }
 
     store.do("loader.hide");
 });
@@ -41,6 +84,9 @@ app.addSetter('load.user', async (data) => {
 
     let res = await fetch("/api/whoami");
     data.user = await res.json();
+
+    window.uid = data.user.id;
+    window.socketConnect();
 
     store.do("loader.hide");
 });
@@ -226,3 +272,11 @@ store.do('load.boards');
 store.do('hash.update');
 
 appComponent.render();
+
+
+// refresh on focus
+window.addEventListener("focus", () => {
+    store.do("load.boards");
+    store.do("load.board");
+    window.dispatchEvent(new CustomEvent("socket-connect"));
+});
