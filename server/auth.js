@@ -12,26 +12,21 @@ module.exports = async (req, res, next) => {
 
     // we will also accept the auth token in the x-api-key header
     if ( req.headers["x-api-key"] ){
-        // let apiKey = req.headers['x-api-key'];
-        // try {
-        //     u = tokenUtils.decrypt(decodeURIComponent(apiKey));
-        //     req.user = {
-        //         id: u.i,
-        //         name: u.u
-        //     };
-        //     console.log("api key accepted for user " + req.user.name);
-        // } catch (e) {
-        //     console.log("invalid api key");
-        //     res.sendStatus(403);
-        //     return;
-        // }
-
-        req.user = {
-            id: 1,
-            name: 'a'
+        let apiKey = req.headers['x-api-key'];
+        try {
+            u = tokenUtils.decrypt(decodeURIComponent(apiKey));
+            req.user = {
+                id: u.i,
+                name: u.u
+            };
+            console.log("api key accepted for user " + req.user.name);
+            next();
+            return;
+        } catch (e) {
+            console.log("invalid api key");
+            res.sendStatus(403);
+            return;
         }
-        next();
-        return;
     }
 
 
@@ -58,6 +53,7 @@ module.exports = async (req, res, next) => {
     // skip auth for pub resources
     // handle login and register paths
     if ( req.originalUrl.startsWith("/pub/") ){
+        console.log("pub");
         next();
         return;
     } if ( req.method == "GET" && req.originalUrl == "/login" ){
