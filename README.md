@@ -44,6 +44,22 @@ or
 - update the url for your tinypin installation
 
 
+# ios shortcuts
+
+adding these ios shortcuts enables native app-link share-sheet integration
+(hopefully these work - new to this whole shortcut thing)
+
+add to tinypin
+https://www.icloud.com/shortcuts/0f096fafcad14b028c1ce4ffd5960216
+
+upload to tinypin
+https://www.icloud.com/shortcuts/a5d4cfae20404e95b1cfb74c8471c07b
+
+Open In (note: this must currently be named exactly 'Open In' for the in app share button to work.)
+https://www.icloud.com/shortcuts/a129342e79ff40ef9e63c94c73ffaa50
+
+
+
 # security
 
 There is trivial security on the web pages to allow for multiple user support.  I make no claim to the robustness of the security for the content nor the hashed credential storage in the database.  Additional layers of security should be considered before exposing the application to the internet.  
