@@ -74,7 +74,7 @@ There is trivial security on the web pages to allow for multiple user support.  
 - boards icon > [squares by Andrejs Kirma from the Noun Project](https://thenounproject.com/term/squares/1160031/)
 - pin icon > [pinned by Gregor Cresnar from the Noun Project](https://thenounproject.com/term/pinned/1560993/)
 - web icon > [website by Supriadi Sihotang from the Noun Project](https://thenounproject.com/term/website/2868662/)
-- edit icon > [edit by TTHNga from the Noun Project](https://thenounproject.com/term/edit/3122457/
+- edit icon > [edit by TTHNga from the Noun Project](https://thenounproject.com/term/edit/3122457/)
 - logout icon > [Log Out by Gregor Cresnar from the Noun Project](https://thenounproject.com/term/log-out/3556472/)
 - trash icon > [Trash by ICONZ from the Noun Project](https://thenounproject.com/term/trash/2449397/)
 - missing icon > [dots-square by Jeff Hilnbrand](https://materialdesignicons.com/icon/dots-square)
