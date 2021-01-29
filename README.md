@@ -31,6 +31,10 @@ or
 
 # chrome extension
 
+https://chrome.google.com/webstore/detail/add-to-tinypin/ehdpchlgmoafibdpmimgigogcgmebfpa
+
+or 
+
 - visit `chrome://extensions`
 - enable developer mode
 - click `Load Unpacked`
@@ -39,7 +43,6 @@ or
 - click `extension options`
 - update the url for your tinypin installation
 
-I'll see about publishing it in time.... 
 
 # security
 
