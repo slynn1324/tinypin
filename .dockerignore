@@ -2,10 +2,10 @@
 *
 
 #only include these files
+!main.js
+!server
 !static
 !templates
 !package.json
 !package-lock.json
 !LICENSE
-!server.js
-

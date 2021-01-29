@@ -33,21 +33,12 @@ window.addEventListener("broadcast", async (e) => {
     if ( e.detail.updateBoard ){
         console.log("updating board");
         let boardId = e.detail.updateBoard;
-    
-        let boardExists = false;
-        for ( let i = 0; i < data.boards.length; ++i ){
-            if ( data.boards[i].id == boardId ){
-                boardExists = true;
-            }
-        }
 
-        // if it's a new board
-        if ( !boardExists ){
-            store.do("load.boards");   
-        }
+        store.do("load.boards");   
+        
 
         // if we are currently viewing this board, reload the pins
-        if ( data.board && boardId == data.board.id ){
+        if ( data.board && boardId && boardId == data.board.id ){
             store.do("load.board", true);
         }
     } else if ( e.detail.deleteBoard ) {
