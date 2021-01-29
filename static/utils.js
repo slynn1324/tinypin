@@ -61,6 +61,21 @@ function getPinById(id){
     return store.data.board.pins[getPinIndexById(id)];
 }
 
+async function sleep(ms){ return new Promise((resolve) => setTimeout(resolve, ms)); }
+
+// async function runAfter(f, ms){
+//     return new Promise( (resolve,reject) => {
+//         setTimeout( () => {
+//             try {
+//                 await f();
+//                 resolve();
+//             } catch (e){
+//                 reject(e);
+//             }
+//         }, ms);
+//     });
+// }
+
 // feature detection
 if ( 'ontouchstart' in window ){
     window.isTouch = true;

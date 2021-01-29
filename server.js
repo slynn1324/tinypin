@@ -134,6 +134,9 @@ app.ws('/ws/:uid', (ws, req) => {
     ws.on("message", (msg) => {
         //console.log("received messsage: " + msg);
     });
+    ws.on("close", () => {
+        console.log("socket closed for user " + req.params.uid);
+    });
     console.log("socket opened for user " + req.params.uid);
 });
 

@@ -278,9 +278,25 @@ store.do('hash.update');
 appComponent.render();
 
 
-// refresh on focus
-window.addEventListener("focus", () => {
-    store.do("load.boards");
-    store.do("load.board");
-    dispatchSocketConnect();
+// refresh on load.  
+window.lastVisibilityChange = new Date().getTime();
+document.addEventListener("visibilitychange", async () => {
+    
+    let now = new Date().getTime();
+
+    // only run if we haven't run in the last second.. prevent double updates
+    if ( document.visibilityState === 'visible' && (now - window.lastVisibilityChange) > 1000) {
+        window.lastVisibilityChange = now;
+
+        let connected = false;
+        if ( dispatchSocketConnect ){ // maybe we stripped out web sockets
+            connected = await dispatchSocketConnect();
+        }
+
+        if ( !connected ){
+            store.do("load.boards");
+            store.do("load.board");
+        }
+    }
+
 });

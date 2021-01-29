@@ -23,39 +23,37 @@ window.addEventListener("socket-connect", () => {
     socketConnect();
 });
 
-function socketConnect(){
+async function socketConnect(){
 
     if ( !window.uid ){
         console.log("no user id, can't open a socket");
-        return;
+        return false;
     }
 
     if ( window.socketConnected ){
         console.log("web socket already connected");
-        return;
+        return true;
     }
 
     window.socketConnected = false;
 
     let s = new WebSocket(getSocketUrl());
 
-    s.onopen = (e) => {
+    s.onopen = async (e) => {
         console.log("web socket connected");
 
-        // wait 10ms to see if the socket stays connected
-        setTimeout( () => {
-            if ( s.readyState == WebSocket.OPEN ){
-                console.log("web socket appears operational");
-                document.body.classList.add("socketConnected");
-                window.socketConnected = true;
-                window.socketConnectFailureCount = 0;
+        // wait 50ms to see if the socket stays connected
+        await sleep(50);
 
-                store.do("load.boards");
-                store.do("load.board");                
-            } else {
-                console.log("web socket connect failed");
-            }
-        }, 10);
+        if ( s.readyState == WebSocket.OPEN ){
+            console.log("web socket appears operational");
+            document.body.classList.add("socketConnected");
+            window.socketConnected = true;
+            return true;
+        } else {
+            console.log("web socket connect failed");
+            return false;
+        }
     };
     
     s.onmessage = (e) => {
