@@ -80,6 +80,10 @@ There is trivial security on the web pages to allow for multiple user support.  
 - missing icon > [dots-square by Jeff Hilnbrand](https://materialdesignicons.com/icon/dots-square)
 - hidden icon > [hidden by vittorio longo from the Noun Project](https://thenounproject.com/term/hidden/3543981/)
 - about icon > [Info by Sriti Chamola from the Noun Project](https://thenounproject.com/term/info/3495259/)
+- link icon > [link by Hassan ali from the Noun Project](https://thenounproject.com/term/link/1880307/)
+- download icon > [Download by Yoyo from the Noun Project](https://thenounproject.com/term/download/2120379/)
+- share icon > [Share by Тимур Минвалеев from the Noun Project](https://thenounproject.com/term/share/1058858/)
+- done icon > [done by Viktor Ostrovsky from the Noun Project](https://thenounproject.com/term/done/587164/)
 
 ## server
 

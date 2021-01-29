@@ -18,6 +18,8 @@ app.addComponent('aboutModal', (store) => { return new Reef("#aboutModal", {
                     <div>
                         <a href="https://www.github.com">github.com/slynn1324/tinypin</a>
                         <br />
+                        build: ${data.user ? data.user.version : 'unknown'}
+                        <br />
                         &nbsp;
                     </div>
                     <div>
@@ -47,6 +49,15 @@ app.addComponent('aboutModal', (store) => { return new Reef("#aboutModal", {
                         &nbsp;hidden icon &raquo; <a href="https://thenounproject.com/term/hidden/3543981/">hidden by vittorio longo from the Noun Project</a>
                         <br />
                         &nbsp;about icon &raquo; <a href="https://thenounproject.com/term/info/3495259/">Info by Sriti Chamola from the Noun Project</a>
+                        <br />
+                        &nbsp;link icon &raquo; <a href="https://thenounproject.com/term/link/1880307/">link by Hassan ali from the Noun Project</a>
+                        <br />
+                        &nbsp;download icon &raquo; <a href="https://thenounproject.com/term/download/2120379/">Download by Yoyo from the Noun Project</a>
+                        <br />
+                        &nbsp;share icon &raquo; <a href="https://thenounproject.com/term/share/1058858/">Share by Тимур Минвалеев from the Noun Project</a>
+                        <br />
+                        &nbsp;done icon &raquo; <a href="https://thenounproject.com/term/done/587164/">done by Viktor Ostrovsky from the Noun Project</a>
+
                         <br />
                         <br />
                         server
