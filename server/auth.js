@@ -53,7 +53,6 @@ module.exports = async (req, res, next) => {
     // skip auth for pub resources
     // handle login and register paths
     if ( req.originalUrl.startsWith("/pub/") ){
-        console.log("pub");
         next();
         return;
     } if ( req.method == "GET" && req.originalUrl == "/login" ){

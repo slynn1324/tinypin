@@ -1,5 +1,7 @@
 const betterSqlite3 = require('better-sqlite3');
 const fs = require('fs').promises;
+const crypto = require('crypto');
+const conf = require('./conf.js');
 
 let db = null;
 
@@ -261,15 +263,15 @@ async function init(path){
 
         let pins = db.prepare(`SELECT * FROM pins`).all();
 
-        if ( require("fs").existsSync(`${IMAGE_PATH}`) ){
-            let userdirs = await fs.readdir(IMAGE_PATH);
+        if ( require("fs").existsSync(conf.getImagePath()) ){
+            let userdirs = await fs.readdir(conf.getImagePath());
             console.log("  migrating images");
             for ( let i = 0; i < userdirs.length; ++i ){       
-                if ( require("fs").existsSync(`${IMAGE_PATH}/${userdirs[i]}/images/originals`) ){
-                    await fs.rename(`${IMAGE_PATH}/${userdirs[i]}/images/originals`, `${IMAGE_PATH}/${userdirs[i]}/images/o`);
+                if ( require("fs").existsSync(`${conf.getImagePath()}/${userdirs[i]}/images/originals`) ){
+                    await fs.rename(`${conf.getImagePath()}/${userdirs[i]}/images/originals`, `${conf.getImagePath()}/${userdirs[i]}/images/o`);
                 }
-                if ( require("fs").existsSync(`${IMAGE_PATH}/${userdirs[i]}/images/thumbnails`) ){
-                    await fs.rename(`${IMAGE_PATH}/${userdirs[i]}/images/thumbnails`, `${IMAGE_PATH}/${userdirs[i]}/images/400`);
+                if ( require("fs").existsSync(`${conf.getImagePath()}/${userdirs[i]}/images/thumbnails`) ){
+                    await fs.rename(`${conf.getImagePath()}/${userdirs[i]}/images/thumbnails`, `${conf.getImagePath()}/${userdirs[i]}/images/400`);
                 }
             }
         }
