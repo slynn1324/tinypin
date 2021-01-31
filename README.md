@@ -6,8 +6,8 @@ A self-hosted, minimalistic image collection board.
 
 ![desktop screenshot](/screenshots/desktop.jpg?raw=true "desktop")
 ![desktop zoom screenshot](/screenshots/desktop-zoom.jpg?raw=true "desktop zoom")
-![ios screenshot](/screenshots/ios.jpg?raw=true "ios" | width=200)
-![ios zoom screenshot](/screenshots/ios-zoom.jpg?raw=true "ios zoom" | width=200)
+![ios screenshot](/screenshots/ios.jpg?raw=true | width=200)
+![ios zoom screenshot](/screenshots/ios-zoom.jpg?raw=true | width=200)
 
 
 # running
