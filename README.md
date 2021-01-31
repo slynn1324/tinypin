@@ -6,8 +6,8 @@ A self-hosted, minimalistic image collection board.
 
 ![desktop screenshot](/screenshots/desktop.jpg?raw=true "desktop")
 ![desktop zoom screenshot](/screenshots/desktop-zoom.jpg?raw=true "desktop zoom")
-![ios screenshot](/screenshots/ios.jpg?raw=true | width=200)
-![ios zoom screenshot](/screenshots/ios-zoom.jpg?raw=true | width=200)
+<image src="/screenshots/ios.jpg?raw=true" width="200" height="433" alt="ios screenshot" />
+<image src="/screenshots/ios-zoom.jpg?raw=true" wdith="200" height="433" alt="ios zoom screenshot" />
 
 
 # running
