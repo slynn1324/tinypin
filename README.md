@@ -2,6 +2,14 @@
 
 A self-hosted, minimalistic image collection board.  
 
+# screenshots
+
+![desktop screenshot](/screenshots/desktop.png?raw=true "desktop")
+![desktop zoom screenshot](/screenshots/desktop-zoom.png?raw=true "desktop zoom")
+![ios screenshot](/screenshots/ios.jpg?raw=true "ios")
+![ios zoom screenshot](/screenshots/ios-zoom.jpg?raw=true "ios zoom")
+
+
 # running
 
 ```
