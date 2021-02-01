@@ -19,7 +19,7 @@ A self-hosted, minimalistic image collection board.
 git clone https://github.com/slynn1324/tinypin.git
 cd tinypin
 npm install
-node server.js
+node main.js
 ```
 
 ## docker
