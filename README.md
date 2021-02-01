@@ -19,7 +19,7 @@ A self-hosted, minimalistic image collection board.
 git clone https://github.com/slynn1324/tinypin.git
 cd tinypin
 npm install
-node server.js
+node main.js
 ```
 
 ## docker
@@ -64,7 +64,7 @@ add to tinypin
 https://www.icloud.com/shortcuts/0f096fafcad14b028c1ce4ffd5960216
 
 upload to tinypin
-https://www.icloud.com/shortcuts/a5d4cfae20404e95b1cfb74c8471c07b
+https://www.icloud.com/shortcuts/87d8c6993c644dc181f220f6a736340d
 
 Open In (note: this must currently be named exactly 'Open In' for the in app share button to work.)
 https://www.icloud.com/shortcuts/a129342e79ff40ef9e63c94c73ffaa50
