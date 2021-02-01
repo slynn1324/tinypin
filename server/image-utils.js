@@ -25,7 +25,8 @@ async function downloadImage(imageUrl){
 
 async function processImage(buffer){
     let original = sharp(buffer);
-    let originalBuffer = await original.toFormat("jpg").toBuffer();  
+    // add rotate to auto-rotate based on metadata, and withMetadata to preserve the original metadata
+    let originalBuffer = await original.toFormat("jpg").rotate().withMetadata().toBuffer();  
     let originalMetadata = await original.metadata();
 
     let thumbnail = await original.resize({ width: THUMBNAIL_IMAGE_SIZE, height: THUMBNAIL_IMAGE_SIZE, fit: 'inside' });
