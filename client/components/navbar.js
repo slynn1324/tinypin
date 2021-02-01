@@ -19,13 +19,14 @@ app.addComponent('navbar', (store) => { return new Reef("#navbar", {
     store: store,
     template: (data) => {
 
-        let boardName = "";
+        
 
         let hiddenBoardImage = '';
         if ( data.board && data.board.hidden ){
             hiddenBoardImage = '<img alt="(hidden)" style="width: 16px; height: 16px; vertical-align: middle; margin-top: 2px;" src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjMDAwMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGRhdGEtbmFtZT0iTGF5ZXIgMSIgdmlld0JveD0iMCAwIDI0IDI0IiB4PSIwcHgiIHk9IjBweCI+PHRpdGxlPkFydGJvYXJkIDY8L3RpdGxlPjxwYXRoIGQ9Ik0xMiw2LjkyQTguNjUsOC42NSwwLDAsMSwxOS44NSwxMmE4LjYxLDguNjEsMCwwLDEtMTUuNywwQTguNjUsOC42NSwwLDAsMSwxMiw2LjkybTAtMkExMC42MiwxMC42MiwwLDAsMCwyLDEyYTEwLjYsMTAuNiwwLDAsMCwyMCwwQTEwLjYyLDEwLjYyLDAsMCwwLDEyLDQuOTJaIj48L3BhdGg+PHBhdGggZD0iTTE0LjIxLDExLjEyYTEuMzQsMS4zNCwwLDAsMS0xLjMzLTEuMzMsMS4zMSwxLjMxLDAsMCwxLC41Mi0xQTMuNDQsMy40NCwwLDAsMCwxMiw4LjQ2LDMuNTQsMy41NCwwLDEsMCwxNS41NCwxMmEzLjQ0LDMuNDQsMCwwLDAtLjI5LTEuNEExLjMxLDEuMzEsMCwwLDEsMTQuMjEsMTEuMTJaIj48L3BhdGg+PHBhdGggZD0iTTE5LDIwYTEsMSwwLDAsMS0uNzEtLjI5bC0xNC0xNEExLDEsMCwwLDEsNS43MSw0LjI5bDE0LDE0YTEsMSwwLDAsMSwwLDEuNDJBMSwxLDAsMCwxLDE5LDIwWiI+PC9wYXRoPjwvc3ZnPg==" />';
         }
 
+        let boardName = "";
         if ( data.board ){
             boardName = /*html*/`
             <span class="navbar-item">
@@ -64,9 +65,15 @@ app.addComponent('navbar', (store) => { return new Reef("#navbar", {
                 <img style="24px; height:24px;" src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjMDAwMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGRhdGEtbmFtZT0iTGF5ZXIgMSIgdmlld0JveD0iMCAwIDI0IDI0IiB4PSIwcHgiIHk9IjBweCI+PHRpdGxlPkFydGJvYXJkIDY8L3RpdGxlPjxwYXRoIGQ9Ik0xMiw2LjkyQTguNjUsOC42NSwwLDAsMSwxOS44NSwxMmE4LjYxLDguNjEsMCwwLDEtMTUuNywwQTguNjUsOC42NSwwLDAsMSwxMiw2LjkybTAtMkExMC42MiwxMC42MiwwLDAsMCwyLDEyYTEwLjYsMTAuNiwwLDAsMCwyMCwwQTEwLjYyLDEwLjYyLDAsMCwwLDEyLDQuOTJaIj48L3BhdGg+PHBhdGggZD0iTTE0LjIxLDExLjEyYTEuMzQsMS4zNCwwLDAsMS0xLjMzLTEuMzMsMS4zMSwxLjMxLDAsMCwxLC41Mi0xQTMuNDQsMy40NCwwLDAsMCwxMiw4LjQ2LDMuNTQsMy41NCwwLDEsMCwxNS41NCwxMmEzLjQ0LDMuNDQsMCwwLDAtLjI5LTEuNEExLjMxLDEuMzEsMCwwLDEsMTQuMjEsMTEuMTJaIj48L3BhdGg+PHBhdGggZD0iTTE5LDIwYTEsMSwwLDAsMS0uNzEtLjI5bC0xNC0xNEExLDEsMCwwLDEsNS43MSw0LjI5bDE0LDE0YTEsMSwwLDAsMSwwLDEuNDJBMSwxLDAsMCwxLDE5LDIwWiI+PC9wYXRoPjwvc3ZnPg==" />
             </a>`;
         }
-        
 
-        
+        let settingsItem = "";
+        if (data.user.admin == "y"){
+            settingsItem = `
+            <a class="navbar-item has-text-right" href="./settings">
+                <span>settings</span>
+                <img style="20px; height:20px;" src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjMDAwMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGRhdGEtbmFtZT0iTGF5ZXIgMSIgdmlld0JveD0iMCAwIDY0IDY0IiB4PSIwcHgiIHk9IjBweCI+PHRpdGxlPnNldHRpbmc8L3RpdGxlPjxwYXRoIGQ9Ik01OS42MSwyMS44M2wtNS04LjY2YTEsMSwwLDAsMC0xLjIzLS40M0w0Ni41MSwxNS41QTIyLjExLDIyLjExLDAsMCwwLDM5LDExLjE1TDM4LDMuODZBMSwxLDAsMCwwLDM3LDNIMjdhMSwxLDAsMCwwLTEsLjg2bC0xLDcuMjlhMjIuMTEsMjIuMTEsMCwwLDAtNy40OCw0LjM1bC02Ljg3LTIuNzZhMSwxLDAsMCwwLTEuMjMuNDNsLTUsOC42NmExLDEsMCwwLDAsLjI0LDEuMjlsNS44MSw0LjU2YTIxLjQzLDIxLjQzLDAsMCwwLDAsOC42NEw0LjYzLDQwLjg4YTEsMSwwLDAsMC0uMjQsMS4yOWw1LDguNjZhMSwxLDAsMCwwLDEuMjMuNDNsNi44Ny0yLjc2QTIyLjExLDIyLjExLDAsMCwwLDI1LDUyLjg1bDEsNy4yOUExLDEsMCwwLDAsMjcsNjFIMzdhMSwxLDAsMCwwLDEtLjg2bDEtNy4yOWEyMi4xMSwyMi4xMSwwLDAsMCw3LjQ4LTQuMzVsNi44NywyLjc2YTEsMSwwLDAsMCwxLjIzLS40M2w1LTguNjZhMSwxLDAsMCwwLS4yNC0xLjI5bC01LjgxLTQuNTZhMjEuNDMsMjEuNDMsMCwwLDAsMC04LjY0bDUuODEtNC41NkExLDEsMCwwLDAsNTkuNjEsMjEuODNabS03Ljc4LDQuNjZhMSwxLDAsMCwwLS4zNiwxLDE5LjM3LDE5LjM3LDAsMCwxLDAsOSwxLDEsMCwwLDAsLjM2LDFsNS42Miw0LjQxLTQuMTMsNy4xNi02LjY0LTIuNjdhMSwxLDAsMCwwLTEuMDYuMiwyMC4wNiwyMC4wNiwwLDAsMS03Ljc4LDQuNTIsMSwxLDAsMCwwLS43LjgxbC0xLDcuMDZIMjcuODdsLTEtNy4wNmExLDEsMCwwLDAtLjctLjgxLDIwLjA2LDIwLjA2LDAsMCwxLTcuNzgtNC41MiwxLDEsMCwwLDAtMS4wNi0uMmwtNi42NCwyLjY3TDYuNTUsNDEuOTJsNS42Mi00LjQxYTEsMSwwLDAsMCwuMzYtMSwxOS4zNywxOS4zNywwLDAsMSwwLTksMSwxLDAsMCwwLS4zNi0xTDYuNTUsMjIuMDhsNC4xMy03LjE2LDYuNjQsMi42N2ExLDEsMCwwLDAsMS4wNi0uMiwyMC4wNiwyMC4wNiwwLDAsMSw3Ljc4LTQuNTIsMSwxLDAsMCwwLC43LS44MWwxLTcuMDZoOC4yNmwxLDcuMDZhMSwxLDAsMCwwLC43LjgxLDIwLjA2LDIwLjA2LDAsMCwxLDcuNzgsNC41MiwxLDEsMCwwLDAsMS4wNi4ybDYuNjQtMi42Nyw0LjEzLDcuMTZaIj48L3BhdGg+PHBhdGggZD0iTTMyLDE3QTE1LDE1LDAsMSwwLDQ3LDMyLDE1LDE1LDAsMCwwLDMyLDE3Wm0wLDI4QTEzLDEzLDAsMSwxLDQ1LDMyLDEzLDEzLDAsMCwxLDMyLDQ1WiI+PC9wYXRoPjwvc3ZnPg==" />
+            </a>`;
+        }
 
         return /*html*/`
         <nav class="navbar is-light" role="navigation" aria-label="main navigation">
@@ -105,6 +112,8 @@ app.addComponent('navbar', (store) => { return new Reef("#navbar", {
                     ${hiddenBoardsItem}
                     
                     ${refreshItem}
+
+                    ${settingsItem}
 
                     <a class="navbar-item has-text-right" data-onclick="navbar.logout">
                         <span>log out ${data.user ? data.user.name : ''}</span>

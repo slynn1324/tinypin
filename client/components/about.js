@@ -3,18 +3,51 @@ app.addSetter('aboutModal.open', (data) => {
 });
 
 app.addSetter('aboutModal.close', (data) => {
+    data.apiKey = null;
+    data.showApiKey = false;
     data.aboutModal.active = false;
 });
+
+app.addSetter('about.showApiKey', async (data, apiKey) => {
+    data.apiKey = apiKey;
+    data.showApiKey = true;
+});
+
+async function showApiKey(){
+    let result = await fetch("/api/apikey");
+    let json = await result.json();
+    let apiKey = json.apiKey;
+    store.do('about.showApiKey', encodeURIComponent(apiKey));
+}
 
 app.addComponent('aboutModal', (store) => { return new Reef("#aboutModal", {
     store: store,
     template: (data) => {
+
+        let apiKeyElement = "";
+        if ( data.showApiKey ){
+            apiKeyElement = /*html*/`
+            <div>
+                <h2><strong>api key for ${data.user.name}:</strong></h2>
+                <input value="${data.apiKey}" style="width: 100%">
+                <br /><br />
+            </div>
+            `;
+        }
+
         return /*html*/`
         <div class="modal ${data.aboutModal.active ? 'is-active' : ''}">
             <div class="modal-background" data-onclick="aboutModal.close"></div>
             <div class="modal-content">
                 <div class="box" style="font-family: monospace;">
-                    <h1><strong>tinypin</strong></h1>
+                    <div class="level mb-0">
+                        <div class="level-left">
+                            <h1><strong>tinypin</strong></h1>
+                        </div>
+                        <div class="level-right">
+                            <a data-onclick-x="showApiKey">show api key</a>
+                        </div>
+                    </div>
                     <div>
                         <a href="https://www.github.com">github.com/slynn1324/tinypin</a>
                         <br />
@@ -22,6 +55,9 @@ app.addComponent('aboutModal', (store) => { return new Reef("#aboutModal", {
                         <br />
                         &nbsp;
                     </div>
+
+                    ${apiKeyElement}
+
                     <div>
                         <h2><strong>credits</strong></h2>
                         client
@@ -57,6 +93,8 @@ app.addComponent('aboutModal', (store) => { return new Reef("#aboutModal", {
                         &nbsp;share icon &raquo; <a href="https://thenounproject.com/term/share/1058858/">Share by Тимур Минвалеев from the Noun Project</a>
                         <br />
                         &nbsp;done icon &raquo; <a href="https://thenounproject.com/term/done/587164/">done by Viktor Ostrovsky from the Noun Project</a>
+                        <br />
+                        &nbsp;settings icon &raquo; <a href="https://thenounproject.com/term/settings/3291880/">setting by LUTFI GANI AL ACHMAD from the Noun Project</a>
 
                         <br />
                         <br />

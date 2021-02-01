@@ -20,13 +20,13 @@
     </head>
     <body>
         <div class="modal is-active">
-            <div class="modal-background" data-onclick="aboutModal.close"></div>
+            <div class="modal-background"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">tinypin &raquo; log in</p>
+                    <p class="modal-card-title">tinypin &raquo; create account</p>
                 </header>
-                <form method="post" action="./login">
-                <section class="modal-card-body">
+                <form method="post" action="./register">
+                    <section class="modal-card-body">
                     
                         <div class="field">
                             <label class="label" for="username">username</label>
@@ -40,31 +40,31 @@
                             <div class="control">
                                 <input class="input" name="password" id="password" type="password">
                             </div>
-                        </div>                  
+                        </div>
 
-                </section>
+                        <div class="field">
+                            <label class="label" for="repeat-password">repeat password</label>
+                            <div class="control">
+                                <input class="input" name="repeat-password" id="repeat-password" type="password">
+                            </div>
+                        </div>
 
-                <footer class="modal-card-foot">
-                    <button id="submitButton" class="button is-success" type="submit">login</button>
-                    <a class="button" href="register">create account</a>
-                    <span id="nope"></span>
-                </footer>
-            </form>
+                    </section>
+
+                    <footer class="modal-card-foot">
+                        <button id="submitButton" class="button is-success" disabled type="submit">create account</button>
+                        <a class="button" href="login.html">login</a>
+                    </footer>
+                </form>
 
             </div>    
 
         </div>
         <script>
 
-// clear previously stored values
-window.localStorage.clear();
-
-if ( window.location.hash == "#nope" ){
-    document.getElementById("nope").innerText = "nope.";
-}
-
 const username = document.getElementById("username");
 const password = document.getElementById("password");
+const passwordRepeat = document.getElementById("repeat-password");
 const submitButton = document.getElementById("submitButton");
 
 const validate = () => {
@@ -89,26 +89,36 @@ const validate = () => {
         password.classList.remove('is-danger');
     }
 
+    if ( password.value != passwordRepeat.value ){
+        if ( passwordRepeat.getAttribute("data-visited") == "y" ){
+            passwordRepeat.classList.add("is-danger");
+        }
+        valid = false;
+    } else {
+        passwordRepeat.classList.remove("is-danger");
+    }
+
     if ( valid ){
         submitButton.disabled = false;
     } else {
         submitButton.disabled = true;
     }
 
-    
 }
 
-// document.addEventListener('input', validate);
-// document.addEventListener('focusin', (evt) => {
-//     if ( evt.target == username ){
-//         username.setAttribute("data-visited", "y");
-//     } else if ( evt.target == password ){
-//         password.setAttribute("data-visited", "y");
-//     }
-// });
-// document.addEventListener('focusout', (evt) => {   
-//     validate();
-// });
+document.addEventListener('input', validate);
+document.addEventListener('focusin', (evt) => {
+    if ( evt.target == username ){
+        username.setAttribute("data-visited", "y");
+    } else if ( evt.target == password ){
+        password.setAttribute("data-visited", "y");
+    } else if ( evt.target == passwordRepeat ){
+        passwordRepeat.setAttribute("data-visited", "y");
+    }
+});
+document.addEventListener('focusout', (evt) => {   
+    validate();
+});
 
         </script>
     </body>

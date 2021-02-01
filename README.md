@@ -95,6 +95,7 @@ There is trivial security on the web pages to allow for multiple user support.  
 - download icon > [Download by Yoyo from the Noun Project](https://thenounproject.com/term/download/2120379/)
 - share icon > [Share by Тимур Минвалеев from the Noun Project](https://thenounproject.com/term/share/1058858/)
 - done icon > [done by Viktor Ostrovsky from the Noun Project](https://thenounproject.com/term/done/587164/)
+- settings icon > [setting by LUTFI GANI AL ACHMAD from the Noun Project](https://thenounproject.com/term/settings/3291880/)
 
 ## server
 

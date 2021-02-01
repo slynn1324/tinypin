@@ -12,6 +12,7 @@
     "better-sqlite3": "^7.1.2",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.5",
+    "eta": "^1.12.1",
     "express": "^4.17.1",
     "express-ws": "^4.0.0",
     "node-fetch": "^2.6.1",

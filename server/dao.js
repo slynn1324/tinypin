@@ -6,7 +6,7 @@ const conf = require('./conf.js');
 let db = null;
 
 function listBoards(userId){
-    let boards = db.prepare("SELECT * FROM boards").all();
+    let boards = db.prepare("SELECT * FROM boards where userId = @userId").all({userId:userId});
 
     // get title pins
     for( let i = 0; i < boards.length; ++i ){
@@ -19,6 +19,10 @@ function listBoards(userId){
     }
 
     return boards;
+}
+
+function countBoardsByUser(userId){
+    return db.prepare("SELECT count(id) as count FROM boards WHERE userId = @userId").get({userId: userId});
 }
 
 function getBoard(userId, boardId){
@@ -56,6 +60,10 @@ function deleteBoard(userId, boardId){
 
 function listPins(userId, boardId){
     return db.prepare("SELECT * FROM pins WHERE userId = @userId and boardId = @boardId").all({userId:userId, boardId:boardId});
+}
+
+function countPinsByUser(userId){
+    return db.prepare("SELECT count(id) as count FROM pins WHERE userId = @userId").get({userId:userId});
 }
 
 function getPin(userId, pinId){
@@ -130,7 +138,24 @@ function deletePin(userId, pinId){
 
 function getProperty(key){
     // this will throw if the property does not exist
-    return db.prepare("SELECT value FROM properties WHERE key = ?").get('cookieKey').value;
+    let result = db.prepare("SELECT value FROM properties WHERE key = ?").get(key);
+    if ( result ){
+        return result.value;
+    }
+    return null;
+}
+
+function setProperty(key, value){
+    let result = db.prepare("UPDATE properties SET value = @value WHERE key = @key").run({key: key, value: value});
+    return result.changes == 1;
+}
+
+function getUser(userId){
+    return db.prepare("SELECT id, username, admin, createDate FROM users where id = ?").get(userId);
+}
+
+function listUsers(){
+    return db.prepare("SELECT id, username, admin, createDate FROM users").all();
 }
 
 function getSaltForUser(username){
@@ -138,11 +163,26 @@ function getSaltForUser(username){
 }
 
 function getUserByNameAndKey(username, key){
-    return db.prepare("SELECT * FROM users WHERE username = @username AND key = @key").get({username: username, key: key});
+    return db.prepare("SELECT id, username, admin, createDate FROM users WHERE username = @username AND key = @key").get({username: username, key: key});
 }
 
-function createUser(username, key, salt){
-    return db.prepare("INSERT INTO users (username, key, salt, createDate) VALUES (@username, @key, @salt, @createDate)").run({username: username, key: key, salt: salt, createDate: new Date().toISOString()});
+function createUser(username, admin, key, salt){
+    return db.prepare("INSERT INTO users (username, admin, key, salt, createDate) VALUES (@username, @admin, @key, @salt, @createDate)").run({username: username, admin: admin, key: key, salt: salt, createDate: new Date().toISOString()});
+}
+
+function getUserCount(){
+    return db.prepare("SELECT count(id) as count FROM users").get().count;
+}
+
+function setUserAdmin(userId, admin){
+    let result = db.prepare("UPDATE users SET admin = @admin WHERE id = @userId").run({userId:userId, admin:admin});
+    return result.changes == 1;
+}
+
+function deleteUser(userId){
+    db.prepare("DELETE FROM pins WHERE userId = ?").run(userId);
+    db.prepare("DELETE FROM boards WHERE userId = ?").run(userId);
+    db.prepare("DELETE FROM users WHERE id = ?").run(userId);
 }
 
 async function init(path){
@@ -310,6 +350,47 @@ async function init(path){
         schemaVersion = 3;
     }
 
+    if ( schemaVersion < 4 ){
+
+        console.log("  running migration v4");
+
+        if ( !isNewDb && !createdBackup ){
+            let backupPath = DB_PATH + ".backup-" + new Date().toISOString();
+            console.log("    backing up to: " + backupPath);
+            db.prepare(`
+            VACUUM INTO ?
+            `).run(backupPath);
+            createdBackup = true;
+        }
+
+        db.transaction( () => {
+
+            db.prepare('ALTER TABLE users ADD COLUMN admin').run();
+            db.prepare('ALTER TABLE users ADD COLUMN uuid').run(); // need a uuid column to track real uniqueness, because we didn't use AUTOINCREMENT.
+            
+            db.prepare("UPDATE users SET admin = 1").run();
+
+            let users = db.prepare("SELECT id FROM users").all();
+
+            for ( let i = 0; i < users.length; ++i ){
+                let uuid = crypto.randomBytes(16).toString("hex"); // not a real uuid, but serves the same purpose
+                db.prepare("UPDATE users SET uuid = @uuid WHERE id = @id").run({id: users[i].id, uuid: uuid});
+            }
+            
+            db.prepare(`
+            INSERT INTO properties (key,value) VALUES (@key, @value)
+            `).run({key: 'registerEnabled', value: "y"});
+
+            db.prepare(`
+            INSERT INTO migrations (id, createDate) VALUES ( @id, @createDate )
+            `).run({id:4, createDate: new Date().toISOString()});
+
+            schemaVersion = 4;
+
+        })();
+
+    }
+
     console.log(`database ready - schema version v${schemaVersion}`);
     console.log('');
 }
@@ -318,18 +399,26 @@ async function init(path){
 module.exports = {
     init: init,
     listBoards: listBoards,
+    countBoardsByUser, countBoardsByUser,
     getBoard: getBoard,
     findBoardByUserAndName: findBoardByUserAndName,
     createBoard: createBoard,
     updateBoard: updateBoard,
     deleteBoard: deleteBoard,
     listPins: listPins,
+    countPinsByUser: countPinsByUser,
     getPin: getPin,
     createPin: createPin,
     updatePin: updatePin,
     deletePin: deletePin,
     getProperty: getProperty,
+    setProperty: setProperty,
+    getUser: getUser,
+    listUsers: listUsers,
     getSaltForUser: getSaltForUser,
+    getUserCount: getUserCount,
     getUserByNameAndKey: getUserByNameAndKey,
-    createUser: createUser
+    createUser: createUser,
+    deleteUser: deleteUser,
+    setUserAdmin: setUserAdmin
 };

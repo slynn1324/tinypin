@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>tinypin > settings</title>
+        <meta charset="utf-8">
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+        <link rel="apple-touch-icon" sizes="180x180" href="pub/icons/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="pub/icons/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="pub/icons/favicon-16x16.png">
+        <link rel="manifest" href="pub/icons/site.webmanifest">
+        <link rel="mask-icon" href="pub/icons/safari-pinned-tab.svg" color="#5bbad5">
+        <link rel="shortcut icon" href="pub/icons/favicon.ico">
+        <meta name="msapplication-TileColor" content="#da532c">
+        <meta name="msapplication-config" content="pub/icons/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="stylesheet" href="pub/bulma-custom.css" />
+    </head>
+    <body>
+
+
+
+        <nav class="navbar is-light" role="navigation" aria-label="main navigation">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="./">
+                    <img alt="boards" style="width:24px; height: 24px;" src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjMDAwMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2OCA0OCIgeD0iMHB4IiB5PSIwcHgiPjxwYXRoIGZpbGw9IiMwMDAwMDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTcyLDgwNiBMMTA3LDgwNiBDMTA4LjEwNDU2OSw4MDYgMTA5LDgwNi44OTU0MzEgMTA5LDgwOCBMMTA5LDgzMiBDMTA5LDgzMy4xMDQ1NjkgMTA4LjEwNDU2OSw4MzQgMTA3LDgzNCBMNzIsODM0IEM3MC44OTU0MzA1LDgzNCA3MCw4MzMuMTA0NTY5IDcwLDgzMiBMNzAsODA4IEM3MCw4MDYuODk1NDMxIDcwLjg5NTQzMDUsODA2IDcyLDgwNiBaIE0xMTIsODIyIEwxMTIsODIyIEwxMTIsODA4IEMxMTIsODA1LjIzODU3NiAxMDkuNzYxNDI0LDgwMyAxMDcsODAzIEw5Niw4MDMgTDk2LDc4OCBDOTYsNzg2Ljg5NTQzMSA5Ni44OTU0MzA1LDc4NiA5OCw3ODYgTDEyMiw3ODYgQzEyMy4xMDQ1NjksNzg2IDEyNCw3ODYuODk1NDMxIDEyNCw3ODggTDEyNCw4MjAgQzEyNCw4MjEuMTA0NTY5IDEyMy4xMDQ1NjksODIyIDEyMiw4MjIgTDExMiw4MjIgWiBNODQsODAzIEw3Miw4MDMgQzY5LjIzODU3NjMsODAzIDY3LDgwNS4yMzg1NzYgNjcsODA4IEw2Nyw4MTcgTDU4LDgxNyBDNTYuODk1NDMwNSw4MTcgNTYsODE2LjEwNDU2OSA1Niw4MTUgTDU2LDc5MSBDNTYsNzg5Ljg5NTQzMSA1Ni44OTU0MzA1LDc4OSA1OCw3ODkgTDgyLDc4OSBDODMuMTA0NTY5NSw3ODkgODQsNzg5Ljg5NTQzMSA4NCw3OTEgTDg0LDgwMyBaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTYgLTc4NikiPjwvcGF0aD48L3N2Zz4=" />
+                </a>
+                
+                <span class="navbar-item">
+                    <span>Settings</span>
+                </span>
+
+                <a role="button" class="navbar-burger is-active" aria-label="menu" aria-expanded="false" href="./">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
+            </div>
+        </nav>
+
+        <section class="section" id="settings-updated" style="display: none;">
+            <div class="notification is-success">
+                Settings updated successfully.
+            </div>
+        </section>
+
+        <section class="section" id="users-updated" style="display: none;">
+            <div class="notification is-success">
+                Users updated successfully.
+            </div>
+        </section>
+
+        <section class="section" id="create-user-error" style="display: none;">
+            <div class="notification is-danger">
+                Error creating user.
+            </div>
+        </section>
+
+        <section class="section" id="created-user" style="display: none;">
+            <div class="notification is-success">
+                Created user.
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="box">
+                <h1 style="border-bottom: 1px solid #eee;"><strong>Settings</strong></h1>
+                <br />
+                <form method="POST" action="./settings">
+                    <input type="hidden" name="action" value="updatePreferences">
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label has-text-weight-normal">Registration: </label>
+                        </div>
+                        
+                        <div class="field-body">
+                            <div class="control">
+                                <div class="select">
+                                    <select name="registerEnabled">
+                                        <option value="y" <% if ( it.registerEnabled == "y" ){ %> selected <% } %> >Enabled</option>
+                                        <option value="n" <% if ( it.registerEnabled != "y" ) { %> selected <% }%> >Disabled</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="has-text-right">
+                        <button class="button is-success">Save</button>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+
+        <div class="section">
+            <div class="box">
+                <h1 style="border-bottom: 1px solid #eee;"><strong>Users</strong></h1>
+                <br />
+
+                <form method="POST" action="./settings">
+                    <input type="hidden" name="action" value="updateUsers">
+                    <table class="table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>id</th>
+                                <th>username</th>
+                                <th>admin</th>
+                                <th>created</th>
+                                <th>boards</th>
+                                <th>pins</th>
+                                <th>&nbsp;</th>
+                            </tr>
+                        <thead>
+                        <tbody>
+                        <% for ( let i = 0; i < it.users.length; ++i ){ let user = it.users[i]; %>
+
+                        <tr>
+                            <td><%= user.id %></td>
+                            <td><%= user.username %></td>
+                            <td>
+                                <% if (it.userId != user.id) { %>
+                                <div class="select is-small">
+                                    <select name="admin-<%= user.id %>">
+                                        <option value="y" <% if (user.admin == "y" ){ %> selected <% } %> >y</option>
+                                        <option value="n" <% if (user.admin != "y" ){ %> selected <% } %> >n</option>
+                                    </select>
+                                </div>
+                                <% } else { %>
+                                <%= user.admin %>
+                                <% } %>
+                            </td>
+                            <td><%= user.createDate %></td>
+                            <td><%= user.boardCount %></td>
+                            <td><%= user.pinCount %></td>
+                            <td>
+                                <% if (it.userId != user.id) { %>
+                                <a class="button is-small is-danger is-light" onclick="deleteUser(<%= user.id %>)">Delete User</a>
+                                <% } %>
+                            </td>
+                        </tr>
+
+                        <% } %>
+                        </tbody>
+                    </table>
+
+                    <div class="level">
+                        <div class="level-left">
+                            <a class="button" onclick="createUser()">Create User</a>
+                        </div>
+                        <div class="level-right">
+                            <button class="button is-success">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="create-user-modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">tinypin &raquo; create account</p>
+                </header>
+                <form method="post" action="./settings" onsubmit="return submitCreateUserForm()">
+                    <input type="hidden" name="action" value="createUser" />
+                    <section class="modal-card-body">
+                    
+                        <div class="field">
+                            <label class="label" for="username">username</label>
+                            <div class="control">
+                                <input class="input" name="username" id="username" type="text">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label" for="password">password</label>
+                            <div class="control">
+                                <input class="input" name="password" id="password" type="password">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label" for="repeatPassword">repeat password</label>
+                            <div class="control">
+                                <input class="input" name="repeatPassword" id="repeatPassword" type="password">
+                            </div>
+                        </div>
+
+                    </section>
+
+                    <footer class="modal-card-foot">
+                        <button id="submitButton" class="button is-success" type="submit">create account</button>
+                        <a id="cancelButton" class="button" onclick="createUserCancel()">Cancel</a>
+                        <span id="createUserError"></span>
+                    </footer>
+                </form>
+
+            </div>    
+        </div>
+
+        <form id="deleteUserForm" action="./settings" method="POST">
+            <input type="hidden" name="action" value="deleteUser" />
+            <input type="hidden" id="deleteUserUid" name="uid" value="" />
+        </form>
+
+
+
+        <script>
+if ( window.location.hash == "#settings-updated" ){
+    document.getElementById("settings-updated").style.display = "block";
+} else if ( window.location.hash =="#users-updated" ){
+    document.getElementById("users-updated").style.display = "block";
+} else if (window.location.hash == "#created-user" ){
+    document.getElementById("created-user").style.display = "block";
+} else if ( window.location.hash == "#create-user-error" ){
+    document.getElementById("create-user-error").style.display = "block";
+}
+
+function createUser(){
+    document.getElementById("create-user-modal").classList.add("is-active");
+}
+
+function createUserCancel(){
+    document.getElementById("create-user-modal").classList.remove("is-active");
+    document.getElementById("username").value = "";
+    document.getElementById("password").value = "";
+    document.getElementById("repeatPassword").value = "";
+}
+
+function submitCreateUserForm(){
+    
+    let createUserError = document.getElementById("createUserError");
+
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+    let repeatPassword = document.getElementById("repeatPassword").value;
+
+    if ( username.trim().length < 1 ){
+        createUserError.innerText = "username is required";
+        return false;
+    } else if ( password.trim().length < 1 ){
+        createUserError.innerText = "password is required";
+        return false;
+    } else if ( password != repeatPassword ){
+        createUserError.innerText = "passwords don't match";
+        return false;
+    }
+
+    createUserError.innerText = "";
+    return true;
+}
+
+function deleteUser(uid){
+    
+    if ( window.confirm("Are you sure you want to delete this user?  All associated data will be deleted.") ){
+        document.getElementById("deleteUserUid").value = uid;
+        document.getElementById("deleteUserForm").submit();
+    }
+}
+
+        </script>
+    </body>
+
+</html>

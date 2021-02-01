@@ -7,6 +7,8 @@ const tokenUtil = require('./token-utils.js');
 const dao = require("./dao.js");
 const conf = require("./conf.js");
 const imageUtils = require('./image-utils.js');
+var eta = require("eta");
+const tokenUtils = require('./token-utils.js');
 
 module.exports = async () => {
 
@@ -77,6 +79,9 @@ module.exports = async () => {
 
     // express config
     const app = express();
+    app.engine("eta", eta.renderFile);
+    app.set("view engine", "eta");
+    app.set("views", "./templates")
     const expressWs = require('express-ws')(app);
 
     app.use(bodyParser.raw({type: 'image/jpeg', limit: '25mb'})); // accept image/jpeg files only
@@ -131,7 +136,12 @@ module.exports = async () => {
     const SERVER_ERROR = {status: "error", error: "server error"};
 
     app.get("/api/whoami", (req, res) => {
-        res.send({name: req.user.name, version: VERSION, id: req.user.id});
+        let user = dao.getUser(req.user.id);
+        if ( !user ){
+            res.sendStatus(403);
+            return;
+        }
+        res.send({name: user.username, id: user.id, admin: user.admin, version: VERSION});
     });
 
     // list boards
@@ -333,6 +343,9 @@ module.exports = async () => {
     app.post("/up", async (req, res) => {
 
         try {
+
+            require("fs").writeFileSync("up.jpg", req.body);
+
             // try to parse the image first... if this blows up we'll stop early
             let image = await imageUtils.processImage(req.body);
 
@@ -358,6 +371,117 @@ module.exports = async () => {
         }
     });
 
+    app.get("/api/apikey", (req,res) => {
+        let s = req.cookies['s'];
+        console.log("s=" + s);
+        res.send({apiKey: s});
+    });
+
+    app.get("/settings", (req, res) => {
+
+        let user = dao.getUser(req.user.id);
+        if ( user.admin != "y" ){
+            res.sendStatus(403);
+            return;
+        }
+
+        let registerEnabled = dao.getProperty("registerEnabled");
+
+        let users = dao.listUsers();
+        for ( let i = 0; i < users.length; ++i ){
+            users[i].boardCount = dao.countBoardsByUser(users[i].id).count;
+            users[i].pinCount = dao.countPinsByUser(users[i].id).count;
+        }
+
+        res.render("settings", {
+            registerEnabled: registerEnabled,
+            users: users,
+            userId: req.user.id
+        });
+    });
+
+    app.post("/settings", async (req, res) => {
+
+        let user = dao.getUser(req.user.id);
+        if ( user.admin != "y" ){
+            res.sendStatus(403);
+            return;
+        }
+
+        if ( req.body.action == "updateUsers" ){
+
+            let users = dao.listUsers();
+
+            for ( let i = 0; i < users.length; ++i ){
+                if ( users[i].id != req.user.id ){   // can't update yourself            
+                    let adminSetting = req.body['admin-' + users[i].id];
+
+                    if ( adminSetting != users[i].admin ){
+                        dao.setUserAdmin(users[i].id, adminSetting);
+                    }
+                }
+            }
+
+            res.redirect("./settings#users-updated");
+            return;
+        
+        } else if ( req.body.action == "updateSettings" ){
+            let registerEnabled = 'y';
+            if ( req.body.registerEnabled == "n" ){
+                registerEnabled = 'n';
+            }
+            dao.setProperty('registerEnabled', registerEnabled);
+
+            res.redirect("./settings#settings-updated");
+            return;
+        } else if ( req.body.action == "createUser" ){
+
+            let username = req.body.username;
+            let password = req.body.password;
+            let repeatPassword = req.body.repeatPassword;
+
+            console.log(`username: ${username} password: ${password} rp: ${repeatPassword}`);
+
+            if ( password != repeatPassword ){
+                res.redirect("./settings#password-match")
+                return;
+            }
+
+            let salt = tokenUtils.createSalt();
+            let key = await tokenUtils.deriveKey(salt, password);
+
+            try{
+                dao.createUser(username, 'n', key, salt);
+            } catch (err){
+                console.log("error creating user " + username, err);
+                res.redirect("./settings#create-user-error");
+                return;
+            }
+
+            res.redirect("./settings#created-user");
+            return;
+
+        } else if ( req.body.action == "deleteUser" ){
+
+            let uid = req.body.uid;
+
+            try {
+                dao.deleteUser(uid);
+                require("fs").rmdirSync(conf.getImagePath() + "/" + uid , { recursive: true });
+            } catch (err){
+                console.log("error deleting user " + uid, err);
+                res.redirect("./settings#delete-user-error");
+                return;
+            }
+
+            res.redirect("./settings#deleted-user");
+            return;
+
+        }
+
+        res.redirect("./settings");
+
+    });
 
 
     // start listening
