@@ -29,7 +29,7 @@
                 </a>
                 
                 <span class="navbar-item">
-                    <span>Settings</span>
+                    <span>tinypin settings</span>
                 </span>
 
                 <a role="button" class="navbar-burger is-active" aria-label="menu" aria-expanded="false" href="./">
@@ -69,7 +69,7 @@
                 <h1 style="border-bottom: 1px solid #eee;"><strong>Settings</strong></h1>
                 <br />
                 <form method="POST" action="./settings">
-                    <input type="hidden" name="action" value="updatePreferences">
+                    <input type="hidden" name="action" value="updateSettings">
                     <div class="field is-horizontal">
                         <div class="field-label is-normal">
                             <label class="label has-text-weight-normal">Registration: </label>
@@ -81,7 +81,7 @@
                                     <select name="registerEnabled">
                                         <option value="y" <% if ( it.registerEnabled == "y" ){ %> selected <% } %> >Enabled</option>
                                         <option value="n" <% if ( it.registerEnabled != "y" ) { %> selected <% }%> >Disabled</option>
-                                    </select>
+                                    </select>   
                                 </div>
                             </div>
                         </div>
@@ -124,8 +124,8 @@
                                 <% if (it.userId != user.id) { %>
                                 <div class="select is-small">
                                     <select name="admin-<%= user.id %>">
-                                        <option value="y" <% if (user.admin == "y" ){ %> selected <% } %> >y</option>
-                                        <option value="n" <% if (user.admin != "y" ){ %> selected <% } %> >n</option>
+                                        <option value="1" <% if (user.admin == 1 ){ %> selected <% } %> >yes</option>
+                                        <option value="0" <% if (user.admin != 1 ){ %> selected <% } %> >no</option>
                                     </select>
                                 </div>
                                 <% } else { %>

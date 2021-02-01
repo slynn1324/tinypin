@@ -94,7 +94,7 @@ module.exports = async (req, res, next) => {
     } else if ( req.method == "GET" && req.originalUrl == "/register" ){
 
         let registerEnabled = dao.getProperty("registerEnabled");
-        if ( registerEnabled != "y" ){
+        if ( registerEnabled != 'y' ){
             res.sendStatus(403);
             return;
         }
@@ -104,7 +104,7 @@ module.exports = async (req, res, next) => {
     } else if ( req.method == "POST" && req.originalUrl == "/register" ){
 
         let registerEnabled = dao.getProperty("registerEnabled");
-        if ( registerEnabled != "y" ){
+        if ( registerEnabled != 'y' ){
             res.sendStatus(403);
             return;
         }

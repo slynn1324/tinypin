@@ -380,7 +380,7 @@ module.exports = async () => {
     app.get("/settings", (req, res) => {
 
         let user = dao.getUser(req.user.id);
-        if ( user.admin != "y" ){
+        if ( user.admin != 1 ){
             res.sendStatus(403);
             return;
         }
@@ -403,7 +403,7 @@ module.exports = async () => {
     app.post("/settings", async (req, res) => {
 
         let user = dao.getUser(req.user.id);
-        if ( user.admin != "y" ){
+        if ( user.admin != 1 ){
             res.sendStatus(403);
             return;
         }
@@ -426,10 +426,11 @@ module.exports = async () => {
             return;
         
         } else if ( req.body.action == "updateSettings" ){
-            let registerEnabled = 'y';
+            let registerEnabled = "y";
             if ( req.body.registerEnabled == "n" ){
-                registerEnabled = 'n';
+                registerEnabled = "n";
             }
+            console.log("set register enabled=" + registerEnabled);
             dao.setProperty('registerEnabled', registerEnabled);
 
             res.redirect("./settings#settings-updated");
@@ -451,7 +452,7 @@ module.exports = async () => {
             let key = await tokenUtils.deriveKey(salt, password);
 
             try{
-                dao.createUser(username, 'n', key, salt);
+                dao.createUser(username, 0, key, salt);
             } catch (err){
                 console.log("error creating user " + username, err);
                 res.redirect("./settings#create-user-error");

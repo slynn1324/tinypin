@@ -365,17 +365,63 @@ async function init(path){
 
         db.transaction( () => {
 
-            db.prepare('ALTER TABLE users ADD COLUMN admin').run();
-            db.prepare('ALTER TABLE users ADD COLUMN uuid').run(); // need a uuid column to track real uniqueness, because we didn't use AUTOINCREMENT.
+            db.prepare(`
+                CREATE TABLE users_new (
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL UNIQUE,
+                    key TEXT NOT NULL,
+                    salt TEXT NOT NULL,
+                    createDate TEXT
+                )
+            `).run();
+
+            db.prepare(`
+                CREATE TABLE boards_new (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+                name TEXT NOT NULL UNIQUE, 
+                userId INTEGER NOT NULL,
+                createDate TEXT,
+                hidden INTEGER,
+                
+                FOREIGN KEY (userId) REFERENCES users_new(id)
+                )
+            `).run();
+
+            db.prepare(`
+            CREATE TABLE pins_new (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                boardId INTEGER NOT NULL,
+                imageUrl TEXT,
+                siteUrl TEXT,
+                description TEXT,
+                sortOrder INTEGER,
+                originalHeight INTEGER,
+                originalWidth INTEGER,
+                thumbnailHeight INTEGER,
+                thumbnailWidth INTEGER,
+                userId INTEGER NOT NULL,
+                createDate TEXT,
+
+                FOREIGN KEY (boardId) REFERENCES boards_new(id),
+                FOREIGN KEY (userId) REFERENCES users_new(id)
+            )
+            `).run();
+
+            db.prepare("INSERT INTO users_new SELECT * FROM users").run();
+            db.prepare("INSERT INTO boards_new SELECT * FROM boards").run();
+            db.prepare("INSERT INTO pins_new SELECT * FROM pins").run();
             
-            db.prepare("UPDATE users SET admin = 1").run();
+            db.prepare("ALTER TABLE users_new ADD COLUMN admin INTEGER").run();
 
-            let users = db.prepare("SELECT id FROM users").all();
+            db.prepare("UPDATE users_new SET admin = 1").run();
 
-            for ( let i = 0; i < users.length; ++i ){
-                let uuid = crypto.randomBytes(16).toString("hex"); // not a real uuid, but serves the same purpose
-                db.prepare("UPDATE users SET uuid = @uuid WHERE id = @id").run({id: users[i].id, uuid: uuid});
-            }
+            db.prepare("DROP TABLE pins").run();
+            db.prepare("DROP TABLE boards").run();
+            db.prepare("DROP TABLE users").run();
+
+            db.prepare("ALTER TABLE pins_new RENAME TO pins").run();
+            db.prepare("ALTER TABLE boards_new RENAME TO boards").run();
+            db.prepare("ALTER TABLE users_new RENAME TO users").run();
             
             db.prepare(`
             INSERT INTO properties (key,value) VALUES (@key, @value)
