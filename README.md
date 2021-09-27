@@ -108,3 +108,7 @@ There is trivial security on the web pages to allow for multiple user support.  
 - library > [node-fetch](https://www.npmjs.com/package/node-fetch)
 - library > [sharp](https://www.npmjs.com/package/sharp)
 - library > [yargs](https://www.npmjs.com/package/yargs)
+
+## buy me a beer
+
+If you find this useful and feel so inclinced, https://paypal.me/slynn1324.  Otherwise, simply enjoy. 
