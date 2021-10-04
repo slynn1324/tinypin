@@ -69,6 +69,7 @@
                 <h1 style="border-bottom: 1px solid #eee;"><strong>Settings</strong></h1>
                 <br />
                 <form method="POST" action="./settings">
+                    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
                     <input type="hidden" name="action" value="updateSettings">
                     <div class="field is-horizontal">
                         <div class="field-label is-normal">
@@ -101,7 +102,8 @@
                 <br />
 
                 <form method="POST" action="./settings">
-                    <input type="hidden" name="action" value="updateUsers">
+                    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+                    <input type="hidden" name="action" value="updateUsers" />
                     <table class="table" style="width: 100%;">
                         <thead>
                             <tr>
@@ -165,6 +167,7 @@
                     <p class="modal-card-title">tinypin &raquo; create account</p>
                 </header>
                 <form method="post" action="./settings" onsubmit="return submitCreateUserForm()">
+                    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
                     <input type="hidden" name="action" value="createUser" />
                     <section class="modal-card-body">
                     
@@ -202,6 +205,7 @@
         </div>
 
         <form id="deleteUserForm" action="./settings" method="POST">
+            <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
             <input type="hidden" name="action" value="deleteUser" />
             <input type="hidden" id="deleteUserUid" name="uid" value="" />
         </form>

@@ -2,6 +2,7 @@ const yargs = require('yargs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require("multer")
+const RateLimit = require("express-rate-limit");
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const tokenUtil = require('./token-utils.js');
@@ -10,9 +11,20 @@ const conf = require("./conf.js");
 const imageUtils = require('./image-utils.js');
 var eta = require("eta");
 const tokenUtils = require('./token-utils.js');
+const csrf = require("csurf");
+const sanitizeFilename = require("sanitize-filename");
 
 // consider using temp files, but we're going to limit the size so should be ok
 const upload = multer({storage:multer.memoryStorage(), limits: {fileSize: 26214400, files: 1}}); // 1 - 25MB file
+
+// enable a rate limit so we can't swamp the server/filesystem -- 100 per second here.  Pretty fast because we're likely
+// running locally and want to load images fast.
+// GitHub CodeQL - js/missing-rate-limiting
+const rateLimiter = new RateLimit({
+    windowMs: 1000,
+    max: 100
+});
+
 
 module.exports = async () => {
 
@@ -88,11 +100,51 @@ module.exports = async () => {
     app.set("views", "./templates")
     const expressWs = require('express-ws')(app);
 
+
+    app.use(rateLimiter); // rate limiting
     app.use(bodyParser.raw({type: 'image/jpeg', limit: '25mb'})); // accept image/jpeg files only
     app.use(bodyParser.urlencoded({ extended: false }))
     app.use(bodyParser.json());
     app.set('json spaces', 2);
     app.use(cookieParser());
+
+
+
+    // api method that are not subject to CSRF checks
+    // handle raw uploads for pin creation
+    app.post("/up", async (req, res) => {
+
+        try {
+            require("fs").writeFileSync("up.jpg", req.body);
+
+            // try to parse the image first... if this blows up we'll stop early
+            let image = await imageUtils.processImage(req.body);
+
+            let boardName = req.headers['board-name'].trim();
+
+            // get the board
+            let board = dao.findBoardByUserAndName(req.user.id, boardName);
+
+            if ( !board ){
+                board = dao.createBoard(req.user.id, boardName, 0);
+            }
+            
+            let pin = dao.createPin(req.user.id, board.id, null, null, null, null, image.original.height, image.original.width, image.thumbnail.height, image.thumbnail.height);
+
+            await imageUtils.saveImage(req.user.id, pin.id, image);
+
+            broadcast(req.user.id, {updateBoard:board.id});
+            res.status(200).send(pin);
+
+        } catch (err){
+            console.log(`Error uploading pin`, err);
+            res.status(500).send(SERVER_ERROR);
+        }
+    });
+
+
+    // all other endpoints require csrf  
+    app.use(csrf({cookie:true}));
 
 
 
@@ -145,7 +197,7 @@ module.exports = async () => {
             res.sendStatus(403);
             return;
         }
-        res.send({name: user.username, id: user.id, admin: user.admin, version: VERSION});
+        res.send({name: user.username, id: user.id, admin: user.admin, version: VERSION, csrf: req.csrfToken()});
     });
 
     // list boards
@@ -227,7 +279,7 @@ module.exports = async () => {
                 res.status(404).send(NOT_FOUND);
             }
         } catch (err) {
-            console.log(`Error deleting board#${req.params.boardId}:`, err);
+            console.log('Error deleting board# %s', req.params.boardId, err);
             res.status(500).send(SERVER_ERROR);
         }
     });
@@ -242,7 +294,7 @@ module.exports = async () => {
                 res.status(404).send(NOT_FOUND);
             }
         } catch (err){
-            console.error(`Error getting pin#${req.params.pinId}: ${err.message}`, err);
+            console.error('Error getting pin# %s', req.params.pinId, err);
             res.status(500).send(SERVER_ERROR);
         }
     });
@@ -295,7 +347,7 @@ module.exports = async () => {
                 res.status(404).send(NOT_FOUND);
             }
         } catch (err) {
-            console.log(`Error updating pin#${req.params.pinId}`, err);
+            console.log('Error updating pin# %s', req.params.pinId, err);
             res.status(500).send(SERVER_ERROR);
         }
     
@@ -325,7 +377,7 @@ module.exports = async () => {
             }
 
         } catch (err){
-            console.log(`Error deleting pin#${req.params.pinId}`, err);
+            console.log('Error deleting pin# %s', req.params.pinId, err);
             res.status(500).send(SERVER_ERROR);
         }
     });
@@ -344,37 +396,7 @@ module.exports = async () => {
         res.status(200).send({t: token});
     });
 
-    // handle raw uploads for pin creation
-    app.post("/up", async (req, res) => {
 
-        try {
-
-            require("fs").writeFileSync("up.jpg", req.body);
-
-            // try to parse the image first... if this blows up we'll stop early
-            let image = await imageUtils.processImage(req.body);
-
-            let boardName = req.headers['board-name'].trim();
-
-            // get the board
-            let board = dao.findBoardByUserAndName(req.user.id, boardName);
-
-            if ( !board ){
-                board = dao.createBoard(req.user.id, boardName, 0);
-            }
-            
-            let pin = dao.createPin(req.user.id, board.id, null, null, null, null, image.original.height, image.original.width, image.thumbnail.height, image.thumbnail.height);
-
-            await imageUtils.saveImage(req.user.id, pin.id, image);
-
-            broadcast(req.user.id, {updateBoard:board.id});
-            res.status(200).send(pin);
-
-        } catch (err){
-            console.log(`Error uploading pin`, err);
-            res.status(500).send(SERVER_ERROR);
-        }
-    });
 
 
     // handle multipart uploads for pin creation
@@ -431,6 +453,7 @@ module.exports = async () => {
         }
 
         res.render("settings", {
+            csrfToken: req.csrfToken(),
             registerEnabled: registerEnabled,
             users: users,
             userId: req.user.id
@@ -478,8 +501,6 @@ module.exports = async () => {
             let password = req.body.password;
             let repeatPassword = req.body.repeatPassword;
 
-            console.log(`username: ${username} password: ${password} rp: ${repeatPassword}`);
-
             if ( password != repeatPassword ){
                 res.redirect("./settings#password-match")
                 return;
@@ -491,7 +512,7 @@ module.exports = async () => {
             try{
                 dao.createUser(username, 0, key, salt);
             } catch (err){
-                console.log("error creating user " + username, err);
+                console.log("error creating user %s", username, err);
                 res.redirect("./settings#create-user-error");
                 return;
             }
@@ -503,11 +524,17 @@ module.exports = async () => {
 
             let uid = req.body.uid;
 
+            // uids must ONLY be integer numbers, to ensure that this is safe to use in the path below
+            if ( !uid.match(/^[0-9]+$/) ){
+                console.log("Invalid uid: %s", uid);
+                res.redirect("./settings#delete-user-error");
+            }
+
             try {
                 dao.deleteUser(uid);
                 require("fs").rmdirSync(conf.getImagePath() + "/" + uid , { recursive: true });
             } catch (err){
-                console.log("error deleting user " + uid, err);
+                console.log("error deleting user %s", uid, err);
                 res.redirect("./settings#delete-user-error");
                 return;
             }

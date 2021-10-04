@@ -26,6 +26,7 @@
                     <p class="modal-card-title">tinypin &raquo; create account</p>
                 </header>
                 <form method="post" action="./register">
+                <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
                     <section class="modal-card-body">
                     
                         <div class="field">

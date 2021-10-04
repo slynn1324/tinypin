@@ -26,6 +26,7 @@
                     <p class="modal-card-title">tinypin &raquo; log in</p>
                 </header>
                 <form method="post" action="./login">
+                <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
                 <section class="modal-card-body">
                     
                         <div class="field">

@@ -99,7 +99,7 @@ module.exports = async (req, res, next) => {
 
         console.log("login");
         // res.type("html").sendFile(path.resolve('./templates/login.html'));
-        res.render("login", { registerEnabled: dao.getProperty("registerEnabled") });
+        res.render("login", { registerEnabled: dao.getProperty("registerEnabled"), csrfToken: req.csrfToken() });
         return;
     } else if ( req.method == "POST" && req.originalUrl == "/login" ){
         let username = req.body.username;
@@ -136,7 +136,7 @@ module.exports = async (req, res, next) => {
             return;
         }
 
-        res.render("register", {});
+        res.render("register", { csrfToken: req.csrfToken() });
         return;
     } else if ( req.method == "POST" && req.originalUrl == "/register" ){
 

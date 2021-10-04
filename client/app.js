@@ -79,6 +79,7 @@ app.addSetter('load.user', async (data) => {
     data.user = await res.json();
 
     window.uid = data.user.id;
+    window.csrfToken = data.user.csrf;
     dispatchSocketConnect();
 
     store.do("loader.hide");
@@ -183,7 +184,10 @@ async function multipartUpload(file, boardId, newBoardName, siteUrl, description
 
     let res = await fetch("./multiup", {
         method: "POST",
-        body: formData
+        body: formData,
+        headers: {
+            "x-csrf-token": window.csrfToken
+        }
     });
 
     if ( res.status == 200 ){
@@ -449,6 +453,11 @@ window.ondrop = async (evt) => {
 
 };
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
 
 
 

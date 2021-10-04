@@ -94,7 +94,8 @@ app.addSetter('addPinModal.save', async (data) => {
         let res = await fetch('api/pins', {
             method: 'POST',
             headers: {
-                'Content-Type': "application/json"
+                'Content-Type': "application/json",
+                "x-csrf-token" : window.csrfToken
             },
             body: JSON.stringify(postData)
         });

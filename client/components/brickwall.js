@@ -32,7 +32,10 @@ app.addSetter("brickwall.deletePin", async (data) => {
     closeLightGallery();
 
     let res = await fetch(`api/pins/${pinId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+            'x-csrf-token': window.csrfToken
+        }
     });
 
     if ( res.status == 200 ){
@@ -63,7 +66,7 @@ async function iosShare(){
     let index = getLightGalleryIndex();
     let pin = data.board.pins[index];
 
-    let result = await fetch("/api/pins/" + pin.id + "/otl", {method: 'POST'});
+    let result = await fetch("/api/pins/" + pin.id + "/otl", {method: 'POST', headers: {'x-csrf-token':window.csrfToken}});
     let obj = await result.json();
     let t = obj.t;
 

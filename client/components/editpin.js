@@ -56,7 +56,10 @@ app.addSetter("editPinModal.save", async (data) => {
         // TODO: make a helper method
         let res = await fetch("/api/boards", {
             method: 'POST',
-            headers: {'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json' 
+                'x-csrf-token': window.csrfToken
+            },
             body: JSON.stringify({
                 "name": data.editPinModal.newBoardName
             })
@@ -79,7 +82,8 @@ app.addSetter("editPinModal.save", async (data) => {
     let res = await fetch('api/pins/' + pin.id, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-csrf-token': window.csrfToken
         },
         body: JSON.stringify(postData)
     });

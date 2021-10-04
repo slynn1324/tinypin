@@ -33,6 +33,7 @@ app.addSetter('editBoardModal.save', async (data) => {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'x-csrf-token': window.csrfToken
         },
         body: JSON.stringify({
             name: name,
@@ -70,7 +71,10 @@ app.addSetter('editBoardModal.delete', async (data) => {
 
 
     let res = await fetch(`/api/boards/${boardId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+            'x-csrf-token':window.csrfToken
+        }
     });
 
     if ( res.status == 200 ){
