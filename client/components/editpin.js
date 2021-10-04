@@ -57,7 +57,7 @@ app.addSetter("editPinModal.save", async (data) => {
         let res = await fetch("/api/boards", {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json' 
+                'Content-Type': 'application/json',
                 'x-csrf-token': window.csrfToken
             },
             body: JSON.stringify({
