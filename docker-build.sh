@@ -1,7 +1,9 @@
 #!/bin/sh
 
+VERSION=$(git rev-parse --verify --short HEAD) 
+
 docker build \
     -t slynn1324/tinypin \
-    --build-arg VERSION=$(git rev-parse --verify --short HEAD) \
+    --build-arg VERSION=$VERSION \
     .
 

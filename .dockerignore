@@ -4,7 +4,7 @@
 #only include these files
 !main.js
 !server
-!static
+!client
 !templates
 !package.json
 !package-lock.json

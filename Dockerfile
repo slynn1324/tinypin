@@ -16,4 +16,4 @@ RUN apk add build-base python3 && npm install --verbose && apk del build-base py
 
 RUN mkdir /data && npm install
 
-ENTRYPOINT ["sh", "-c" , "node server.js -i /data/images -d /data/tinypin.db"]
+ENTRYPOINT ["sh", "-c" , "node main.js -i /data/images -d /data/tinypin.db"]
