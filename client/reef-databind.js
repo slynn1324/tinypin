@@ -146,6 +146,7 @@ Reef.databind = function(reef){
                     } else {
                         elem.checked = false;
                     }
+
                 } else {
                     elem.value = val;
                 }
@@ -170,7 +171,7 @@ Reef.databind = function(reef){
             }
 
             // multiple selects need special handling
-            if ( target.tagName == 'SELECT' && target.matches("[multiple]") ){
+            else if ( target.tagName == 'SELECT' && target.matches("[multiple]") ){
                 val = [];
                 let options = target.querySelectorAll("option");
                 for ( let i = 0; i < options.length; ++i ){

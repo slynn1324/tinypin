@@ -438,3 +438,14 @@ body.socketConnected #socketConnected {
 .is-touch .navbar.is-light .navbar-brand .navbar-link.is-active {
     background-color: transparent;
 }
+
+
+#dragAndDropModal .modal-background{
+    background: #fff;
+}
+
+#dragAndDropModal .box {
+    background: none;
+    border: 3px dashed #000;
+    text-align: center;
+}

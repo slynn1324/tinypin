@@ -71,6 +71,8 @@ app.addSetter('load.board', async (data, force) => {
 });
 
 app.addSetter('load.user', async (data) => {
+
+    console.log("load.user");
     store.do("loader.show");
 
     let res = await fetch("/api/whoami");
@@ -95,6 +97,102 @@ app.addSetter("hash.update", (data) => {
         data.aboutModal.active = false;
     }
 });
+
+app.addSetter("app.uploadDroppedFiles", async (data, evt) => {
+
+    let boardId = store.data.board.id;
+
+    if ( boardId ){
+        let hasFiles = event.dataTransfer.types.find(i => i == "Files") == "Files";
+        if ( hasFiles ){
+            
+            if ( evt.dataTransfer.items ){
+
+                let files = [];
+
+                for ( let i = 0; i < evt.dataTransfer.items.length; ++i ){
+                    if ( evt.dataTransfer.items[i].kind === "file" ){
+                        let file = evt.dataTransfer.items[i].getAsFile();
+
+                         if ( file.type != "image/jpeg" && file.type != "image/png" ){
+        
+                            window.alert("Unsupported file type. JPEG and PNG images are supported.");
+                            console.log("Unsupported file type: " + file.type);
+
+                            return;
+                        } 
+
+                        // check size
+                        if ( file.size >= 26214400 ){
+                            window.alert("File size exceeds the 25MB limit.");
+                            console.log("File size exceeds the 25MB limit. size=" + file.size);
+                            document.getElementById("fileInput").value = "";        
+                            return;
+                        }
+
+                        files.push(file);
+                    
+                    }
+                }
+
+                console.log("Number of files=" + files.length);
+
+                for ( let i = 0; i < files.length; ++i ){
+
+                    data.dropUploadMessage = `Uploading ${i+1} of ${files.length}`;
+
+                    try {
+                        let newPin = await multipartUpload(files[i], boardId);
+                        if ( data.board && data.board.id == boardId ){
+                            data.board.pins.push(newPin);
+                        }
+                    } catch (e){
+                        window.alert("Error uploading images.");
+                        break;
+                    }
+                }
+
+                data.dropUploadMessage = null;
+
+            }
+
+        } 
+    }
+
+});
+
+function PostException(statusCode, errorMessage){
+    this.statusCode = statusCode;
+    this.errorMessage = errorMessage;
+}
+
+async function multipartUpload(file, boardId, newBoardName, siteUrl, description){
+    console.log("attempting multipart upload");
+    let formData = new FormData();
+    formData.append("file", file);
+    formData.append("boardId", boardId);
+    if ( newBoardName ){
+        formData.append("newBoardName", newBoardName);
+    }
+    if ( siteUrl ){
+        formData.append("siteUrl", siteUrl);   
+    }
+    if ( description ){
+        formData.append("description", description);
+    }
+
+    let res = await fetch("./multiup", {
+        method: "POST",
+        body: formData
+    });
+
+    if ( res.status == 200 ){
+        return res.json();
+    } else {
+        console.error("error uploading status=" + res.status + " body=" + await res.text());
+        throw new PostException(res.status);
+    }
+}
 
 function dispatchSocketConnect(){
     window.dispatchEvent(new CustomEvent("socket-connect"));
@@ -121,7 +219,8 @@ let store = new Reef.Store({
             previewImageUrl: null,
             siteUrl: "",
             description: "",
-            saveInProgress: false
+            saveInProgress: false,
+            didYouKnowDragAndDropMessageDisabled: window.localStorage.addPinModal_didYouKnowDragAndDropMessageDisabled == "true" || false
         },
         pinZoomModal: {
             active: false,
@@ -167,6 +266,23 @@ const appComponent = new Reef("#app", {
         <div id="editBoardModal"></div>
         <div id="aboutModal"></div>
         <div id="editPinModal"></div>
+        <div id="dragAndDropModal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <div class="box">
+                    <div class="m-6">drop to add pins</div>
+                </div>
+            </div>
+        </div>
+        <div class="modal ${data.dropUploadMessage ? 'is-active' : ''}">
+            <div class="modal-background"></div>
+            <div class="modal-content has-text-centered">
+                <div class="box">
+                    <div class="button is-text is-large is-loading"></div>  
+                    <div>${data.dropUploadMessage}</div>         
+                </div>
+            </div>
+        </div>
         `
         //<div id="loader" class="button is-text ${data.loading ? 'is-loading' : ''}"></div>
     }
@@ -291,3 +407,49 @@ document.addEventListener("visibilitychange", async () => {
     }
 
 });
+
+window.dragInProgress = false;
+
+window.ondragover = (evt) => {
+    
+    let data = store.data;
+
+    if ( !data.board || data.addPinModal.active || data.editPinModal.active || data.aboutModal.active || data.pinZoomModal.active ){
+        return;
+    }
+
+    evt.preventDefault();
+
+    let hasFiles = event.dataTransfer.types.find(i => i == "Files") == "Files";
+    if ( hasFiles ){
+        window.dragInProgress = true;
+        document.getElementById("dragAndDropModal").classList.add("is-active");
+    }    
+};
+
+window.ondragleave = (evt) => {
+    if ( evt.x == 0 && evt.y == 0 ){
+        document.getElementById("dragAndDropModal").classList.remove("is-active");
+        window.dragInProgress = false;
+    }
+}
+
+window.ondrop = async (evt) => {
+
+    if ( window.dragInProgress ){
+        evt.preventDefault();
+
+        document.getElementById("dragAndDropModal").classList.remove("is-active");
+
+        let hasFiles = event.dataTransfer.types.find(i => i == "Files") == "Files";
+        if ( hasFiles ){
+            store.do("app.uploadDroppedFiles", evt);
+        }
+    }
+
+};
+
+
+
+
+

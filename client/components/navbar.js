@@ -67,7 +67,7 @@ app.addComponent('navbar', (store) => { return new Reef("#navbar", {
         }
 
         let settingsItem = "";
-        if (data.user.admin == 1){
+        if (data.user && data.user.admin == 1){
             settingsItem = `
             <a class="navbar-item has-text-right" href="./settings">
                 <span>tinypin settings</span>

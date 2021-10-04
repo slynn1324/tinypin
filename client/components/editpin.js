@@ -30,7 +30,7 @@ app.addGetter('editPinModal.isValid', (data) => {
     
     let pin = getPinById(data.editPinModal.pin.id);
 
-    if ( pin.siteUrl == data.editPinModal.pin.siteUrl &&
+    if ( pin && pin.siteUrl == data.editPinModal.pin.siteUrl &&
          pin.description == data.editPinModal.pin.description &&
          pin.boardId == data.editPinModal.pin.boardId ){
         return false;

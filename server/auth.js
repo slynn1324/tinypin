@@ -8,6 +8,36 @@ function sendAuthCookie(res, c){
     res.cookie('s', tokenUtils.encrypt(c), {maxAge: 315569520000}); // 10 years
 }
 
+function maybeGetUser(req){
+
+    if ( !req.cookies ){
+        return null;
+    }
+
+    // if we made it this far, we're eady to check for the cookie
+    let s = req.cookies.s;
+
+    // TODO: should probably check if the user's access has been revoked,
+    // but we currently don't allow deleting users anyway.  A key rotation would 
+    // be the other solution, but that would log out all users and require new tokens
+    // to be created.
+    if ( s ){
+        try {
+            s = tokenUtils.decrypt(s);
+            if ( s.i && s.u ){
+                return {
+                    id: s.i,
+                    name: s.u
+                }
+            }
+        } catch (err) {
+            console.log(`error parsing cookie: `, err);
+        }
+    }
+
+    return null;
+}
+
 module.exports = async (req, res, next) => {
 
     // we will also accept the auth token in the x-api-key header
@@ -60,6 +90,13 @@ module.exports = async (req, res, next) => {
         next();
         return;
     } if ( req.method == "GET" && req.originalUrl == "/login" ){
+
+
+        if ( maybeGetUser(req) ){
+            res.redirect("./");
+            return;
+        }
+
         console.log("login");
         // res.type("html").sendFile(path.resolve('./templates/login.html'));
         res.render("login", { registerEnabled: dao.getProperty("registerEnabled") });
@@ -135,26 +172,27 @@ module.exports = async (req, res, next) => {
         return;
     } 
 
-    // if we made it this far, we're eady to check for the cookie
-    let s = req.cookies.s;
+    // // if we made it this far, we're eady to check for the cookie
+    // let s = req.cookies.s;
 
-    // TODO: should probably check if the user's access has been revoked,
-    // but we currently don't allow deleting users anyway.  A key rotation would 
-    // be the other solution, but that would log out all users and require new tokens
-    // to be created.
-    if ( s ){
-        try {
-            s = tokenUtils.decrypt(s);
-            if ( s.i && s.u ){
-                req.user = {
-                    id: s.i,
-                    name: s.u
-                }
-            }
-        } catch (err) {
-            console.error(`error parsing cookie: `, err);
-        }
-    }
+    // // TODO: should probably check if the user's access has been revoked,
+    // // but we currently don't allow deleting users anyway.  A key rotation would 
+    // // be the other solution, but that would log out all users and require new tokens
+    // // to be created.
+    // if ( s ){
+    //     try {
+    //         s = tokenUtils.decrypt(s);
+    //         if ( s.i && s.u ){
+    //             req.user = {
+    //                 id: s.i,
+    //                 name: s.u
+    //             }
+    //         }
+    //     } catch (err) {
+    //         console.error(`error parsing cookie: `, err);
+    //     }
+    // }
+    req.user = maybeGetUser(req);
 
     if ( !req.user ){
         res.redirect("/login");

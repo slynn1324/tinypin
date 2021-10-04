@@ -58,7 +58,11 @@ function getPinIndexById(id){
 }
 
 function getPinById(id){
-    return store.data.board.pins[getPinIndexById(id)];
+    try{
+        return store.data.board.pins[getPinIndexById(id)];
+    } catch (e){
+        return null;
+    }
 }
 
 async function sleep(ms){ return new Promise((resolve) => setTimeout(resolve, ms)); }

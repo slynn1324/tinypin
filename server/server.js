@@ -1,6 +1,7 @@
 const yargs = require('yargs');
 const express = require('express');
 const bodyParser = require('body-parser');
+const multer = require("multer")
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const tokenUtil = require('./token-utils.js');
@@ -9,6 +10,9 @@ const conf = require("./conf.js");
 const imageUtils = require('./image-utils.js');
 var eta = require("eta");
 const tokenUtils = require('./token-utils.js');
+
+// consider using temp files, but we're going to limit the size so should be ok
+const upload = multer({storage:multer.memoryStorage(), limits: {fileSize: 26214400, files: 1}}); // 1 - 25MB file
 
 module.exports = async () => {
 
@@ -340,6 +344,7 @@ module.exports = async () => {
         res.status(200).send({t: token});
     });
 
+    // handle raw uploads for pin creation
     app.post("/up", async (req, res) => {
 
         try {
@@ -358,7 +363,7 @@ module.exports = async () => {
                 board = dao.createBoard(req.user.id, boardName, 0);
             }
             
-            let pin = dao.createPin(req.user.id, board.id, null, null, null, null, image.original.height, image.original.width, image.thumbnail.height, image.thumbnailWidth);
+            let pin = dao.createPin(req.user.id, board.id, null, null, null, null, image.original.height, image.original.width, image.thumbnail.height, image.thumbnail.height);
 
             await imageUtils.saveImage(req.user.id, pin.id, image);
 
@@ -367,6 +372,38 @@ module.exports = async () => {
 
         } catch (err){
             console.log(`Error uploading pin`, err);
+            res.status(500).send(SERVER_ERROR);
+        }
+    });
+
+
+    // handle multipart uploads for pin creation
+    app.post("/multiup", upload.single('file'), async(req, res) => {
+        try {
+
+            let image = await imageUtils.processImage(req.file.buffer); // file.buffer only works with the Memory store for multer.  
+
+            let boardId = req.body.boardId;
+
+            let board = null;
+
+            if ( boardId == "new" ){
+                board = dao.createBoard(req.user.id, req.body.newBoardName, 0);
+            } else {
+                board = dao.getBoard(req.user.id, boardId);
+            } 
+
+            console.log(image);
+
+            let pin = dao.createPin(req.user.id, board.id, null, req.body.siteUrl, req.body.description, null, image.original.height, image.original.width, image.thumbnail.height, image.thumbnail.height);
+
+            await imageUtils.saveImage(req.user.id, pin.id, image);
+
+            broadcast(req.user.id, {updateBoard:board.id});
+            res.status(200).send(pin);
+
+        } catch (err) {
+            console.log(`Error creating pin via multipart upload`, err);
             res.status(500).send(SERVER_ERROR);
         }
     });
