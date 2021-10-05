@@ -108,45 +108,18 @@ module.exports = async () => {
     app.set('json spaces', 2);
     app.use(cookieParser());
 
-
-
-    // api method that are not subject to CSRF checks
-    // handle raw uploads for pin creation
-    app.post("/up", async (req, res) => {
-
-        try {
-            require("fs").writeFileSync("up.jpg", req.body);
-
-            // try to parse the image first... if this blows up we'll stop early
-            let image = await imageUtils.processImage(req.body);
-
-            let boardName = req.headers['board-name'].trim();
-
-            // get the board
-            let board = dao.findBoardByUserAndName(req.user.id, boardName);
-
-            if ( !board ){
-                board = dao.createBoard(req.user.id, boardName, 0);
-            }
-            
-            let pin = dao.createPin(req.user.id, board.id, null, null, null, null, image.original.height, image.original.width, image.thumbnail.height, image.thumbnail.height);
-
-            await imageUtils.saveImage(req.user.id, pin.id, image);
-
-            broadcast(req.user.id, {updateBoard:board.id});
-            res.status(200).send(pin);
-
-        } catch (err){
-            console.log(`Error uploading pin`, err);
-            res.status(500).send(SERVER_ERROR);
+    // only appy csrf if we don't have an x-api-key header.  The value of the x-api-key will be validated by the auth middleware
+    app.use( (req,res,next) => {
+        let apiKey = req.headers["x-api-key"];
+        if ( apiKey ){
+            next();
+        } else {
+            csrf({cookie:true})(req,res,next);
         }
     });
 
-
-    // all other endpoints require csrf  
-    app.use(csrf({cookie:true}));
-
-
+    // // all other endpoints require csrf  
+    // app.use(csrf({cookie:true}));
 
     // accept websocket connections.  currently are parsing the userid from the path to 
     // map the connections to only notify on changes from the same user.
@@ -397,6 +370,37 @@ module.exports = async () => {
     });
 
 
+    // api method that are not subject to CSRF checks
+    // handle raw uploads for pin creation
+    app.post("/up", async (req, res) => {
+
+        try {
+            require("fs").writeFileSync("up.jpg", req.body);
+
+            // try to parse the image first... if this blows up we'll stop early
+            let image = await imageUtils.processImage(req.body);
+
+            let boardName = req.headers['board-name'].trim();
+
+            // get the board
+            let board = dao.findBoardByUserAndName(req.user.id, boardName);
+
+            if ( !board ){
+                board = dao.createBoard(req.user.id, boardName, 0);
+            }
+            
+            let pin = dao.createPin(req.user.id, board.id, null, null, null, null, image.original.height, image.original.width, image.thumbnail.height, image.thumbnail.height);
+
+            await imageUtils.saveImage(req.user.id, pin.id, image);
+
+            broadcast(req.user.id, {updateBoard:board.id});
+            res.status(200).send(pin);
+
+        } catch (err){
+            console.log(`Error uploading pin`, err);
+            res.status(500).send(SERVER_ERROR);
+        }
+    });
 
 
     // handle multipart uploads for pin creation
