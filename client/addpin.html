@@ -73,6 +73,23 @@ app.addSetter("hash.parse", (data) => {
 
 });
 
+app.addSetter("load.user", async (data) => {
+    store.do("loader.show");
+
+    let res = await fetch("/api/whoami");
+
+    if ( res.status == 200 ){
+        data.user = await res.json();
+        
+        window.csrfToken = data.user.csrf;
+    } else {
+        console.log("error getting user");
+    }
+
+
+    store.do("loader.hide");
+});
+
 app.addSetter("load.boards", async (data) => {
 
     store.do("loader.show");
@@ -138,7 +155,7 @@ app.addSetter('addPinModal.save', async (data) => {
     if ( boardId == "new" ){
         let res = await fetch('api/boards', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': window.csrfToken },
             body: JSON.stringify({
                 "name": data.addPinModal.newBoardName
             })
@@ -161,7 +178,8 @@ app.addSetter('addPinModal.save', async (data) => {
     let res = await fetch('api/pins', {
         method: 'POST',
         headers: {
-            'Content-Type': "application/json"
+            'Content-Type': "application/json",
+            'x-csrf-token': window.csrfToken
         },
         body: JSON.stringify(postData)
     });
@@ -348,6 +366,8 @@ if ( target ){
 
  
 store.do('hash.parse');
+
+store.do("load.user");
 
 store.do('load.boards');
 
