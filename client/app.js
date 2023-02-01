@@ -103,6 +103,8 @@ app.addSetter("app.uploadDroppedFiles", async (data, evt) => {
 
     let boardId = store.data.board.id;
 
+    const supportedTypes = ["image/jpeg","image/png","image/webp"];
+
     if ( boardId ){
         let hasFiles = event.dataTransfer.types.find(i => i == "Files") == "Files";
         if ( hasFiles ){
@@ -115,9 +117,9 @@ app.addSetter("app.uploadDroppedFiles", async (data, evt) => {
                     if ( evt.dataTransfer.items[i].kind === "file" ){
                         let file = evt.dataTransfer.items[i].getAsFile();
 
-                         if ( file.type != "image/jpeg" && file.type != "image/png" ){
+                         if ( !supportedTypes.includes(file.type)){
         
-                            window.alert("Unsupported file type. JPEG and PNG images are supported.");
+                            window.alert("Unsupported file type. JPEG, PNG, and WebP images are supported.");
                             console.log("Unsupported file type: " + file.type);
 
                             return;

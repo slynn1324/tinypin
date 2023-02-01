@@ -142,10 +142,12 @@ app.addSetter('addPinModal.fileChosen', (data, target) => {
 
     let file = target.files[0];
 
+    const supportedTypes = ["image/jpeg","image/png","image/webp"];
+
     // check type
-    if ( file.type != "image/jpeg" && file.type != "image/png" ){
+    if ( !supportedTypes.includes(file.type)){
         
-        window.alert("Unsupported file type. JPEG and PNG images are supported.");
+        window.alert("Unsupported file type. JPEG, PNG and WebP images are supported.");
         console.log("Unsupported file type: " + file.type);
 
         document.getElementById("fileInput").value = "";
