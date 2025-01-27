@@ -1,0 +1,36 @@
+{
+    "name": "add to tinypin",
+    "version": "1.0.0",
+    "description": "add to tinypin context menu plugin",
+    "manifest_version": 2,
+    "background" : {
+        "scripts": ["background.js"],
+        "persistent": true
+    },
+    "options_ui" : {
+    "page": "options.html",
+    "open_in_tab": false
+    },
+    "permissions" : [
+        "contextMenus",
+        "storage"
+    ],
+    "icons": {
+        "16" : "icon16.png",
+        "32" : "icon32.png",
+        "48" : "icon48.png",
+        "128" : "icon128.png"
+    },
+    "browser_action" :{
+        "default_title": "add to tinypin",
+        "default_icon" :{
+            "16": "icon16.png",
+            "32": "icon32.png"
+        }
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "@slynn1324"
+        }
+    }
+}
